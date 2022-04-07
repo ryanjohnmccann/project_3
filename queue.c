@@ -58,4 +58,7 @@ void clean_queue(struct Queue *queue) {
 
 }
 
-// TODO: Implement print function
+// TODO: Implement
+void print_queue(struct Queue *queue) {
+
+}

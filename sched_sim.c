@@ -8,10 +8,10 @@
 struct CPUInfo cpu_info;
 struct MethodStats method_stats[4];
 
-extern arrival_queue;
-extern ready_queue;
-extern finished_queue;
-extern process_info;
+extern struct Queue *arrival_queue;
+extern struct Queue *ready_queue;
+extern struct Queue *finished_queue;
+extern struct ProcessInfo process_info[100];
 
 void init_sim(int method_num) {
     cpu_info.time = 0;
@@ -24,9 +24,43 @@ void init_sim(int method_num) {
     method_stats[method_num].context_switches = 0;
 }
 
+void print_cpu(int time, char state, int pid, int second_pid, int burst, struct Queue *queue) {
+    printf("t = %i\n", time);
+    if (state == 'L') {
+        printf("CPU: Loading process %i (CPU burst = %i)\n", pid, burst);
+    }
+    else if (state == 'R') {
+        printf("CPU: Reading process %i (remaining CPU burst = %i)\n", pid, burst);
+    }
+    else if (state == 'F') {
+        printf("CPU: Finishing process %i; loading process %i (CPU burst = %i)\n", pid, second_pid, burst);
+    }
+    // TODO: Implement (preemptive)
+    else {
+        printf("=== IMPLEMENT ===\n");
+    }
+    print_queue(queue);
+    printf("\n\n");
+}
+
 void fcfs(int snapshot) {
+    int tmp = 0;
+
     printf("***** FCFS Scheduling *****\n");
     while (1) {
+        // Add by pid since file is organized by arrival time
+        while (1) {
+            // Add to ready queue
+            if (process_info[rear(arrival_queue)].arrival >= cpu_info.time) {
+                enqueue(ready_queue, process_info[rear(arrival_queue)].pid);
+                dequeue(arrival_queue);
+            }
+            // Nothing else to add
+            else {
+                break;
+            }
+        }
+        printf("t = %i", cpu_info.time);
 
         break;
     }
