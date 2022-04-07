@@ -1,15 +1,19 @@
 #ifndef PROJECT_3_QUEUE_H
 #define PROJECT_3_QUEUE_H
 
+// Source for queue code: https://www.geeksforgeeks.org/queue-set-1introduction-and-array-implementation/
+
 // TODO: Queue should have the ability to grow and shrink? No bounds?
 struct Queue {
-    int front, rear;
+    int front, rear, size, capacity;
     int *array;
 };
 
-void create_queue(struct Queue *queue);
+struct Queue *create_queue(int capacity);
 
-void is_empty(struct Queue *queue);
+int is_full(struct Queue *queue);
+
+int is_empty(struct Queue *queue);
 
 void enqueue(struct Queue *queue, int item);
 
@@ -19,4 +23,4 @@ void print_queue(struct Queue *queue);
 
 void clean_queue(struct Queue *queue);
 
-#endif //PROJECT_3_QUEUE_H
+#endif
