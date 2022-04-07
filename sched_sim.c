@@ -26,12 +26,15 @@ void init_sim(int method_num) {
 
 void print_cpu(int time, char state, int pid, int second_pid, int burst, struct Queue *queue) {
     printf("t = %i\n", time);
+    // Loading
     if (state == 'L') {
         printf("CPU: Loading process %i (CPU burst = %i)\n", pid, burst);
     }
+    // Running
     else if (state == 'R') {
-        printf("CPU: Reading process %i (remaining CPU burst = %i)\n", pid, burst);
+        printf("CPU: Running process %i (remaining CPU burst = %i)\n", pid, burst);
     }
+    // Finishing
     else if (state == 'F') {
         printf("CPU: Finishing process %i; loading process %i (CPU burst = %i)\n", pid, second_pid, burst);
     }
@@ -50,7 +53,7 @@ void fcfs(int snapshot) {
     while (1) {
         // Add by pid since file is organized by arrival time
         while (1) {
-            // Add to ready queue
+            // Add to ready queue, remove from arrival
             if (process_info[rear(arrival_queue)].arrival >= cpu_info.time) {
                 enqueue(ready_queue, process_info[rear(arrival_queue)].pid);
                 dequeue(arrival_queue);
@@ -60,8 +63,9 @@ void fcfs(int snapshot) {
                 break;
             }
         }
-        printf("t = %i", cpu_info.time);
-
+        // TODO: Implement
+        if (cpu_info.time == snapshot || (snapshot == 1 && cpu_info.time == 0)) {
+        }
         break;
     }
 }
