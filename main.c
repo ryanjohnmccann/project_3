@@ -13,7 +13,8 @@
 struct Queue *arrival_queue;
 struct Queue *ready_queue;
 struct Queue *finished_queue;
-struct MethodStats method_stats[4];
+// TODO: Find a better way to do this
+struct ProcessInfo process_info[100];
 
 void init_queues(const char *file_name) {
     // Flush all prior contents and free allocated memory
@@ -28,8 +29,6 @@ void init_queues(const char *file_name) {
     int pid = 0;
     int data_count = 1;
     int curr_num;
-    // TODO: Find a better way to do this
-    struct ProcessInfo process_info[100];
 
     fp = fopen(file_name, "r");
     while (!feof(fp)) {
@@ -53,9 +52,14 @@ void init_queues(const char *file_name) {
     }
     fclose(fp);
 
-    arrival_queue = create_queue(arr_len);
     ready_queue = create_queue(arr_len);
     finished_queue = create_queue(arr_len);
+
+    // Add processes to arrival queue
+    arrival_queue = create_queue(arr_len);
+    for (int i = 0; i < arr_len; i++) {
+        enqueue(arrival_queue, process_info[i].pid);
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -70,11 +74,11 @@ int main(int argc, char *argv[]) {
     for (mode_select = 0; mode_select < 5; mode_select++) {
         // Reset arrival queue
         init_queues(file_name);
-        // Initialize a new simulation
-        init_sim();
         // First come, first served
         if (mode_select == 0) {
-
+            // Initialize a new simulation
+            init_sim(0);
+            fcfs(snap_interval);
         }
     }
 

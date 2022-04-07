@@ -3,7 +3,7 @@
 
 struct CPUInfo {
     int burst, time, active_process;
-    char state[50];
+    char state;
     // TODO: Past run processes (ordered list) (queue?)
 };
 
@@ -17,6 +17,8 @@ struct MethodStats {
     int context_switches;
 };
 
-void init_sim();
+void init_sim(int method_num);
+
+void fcfs(int snapshot);
 
 #endif
