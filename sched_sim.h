@@ -1,6 +1,8 @@
 #ifndef PROJECT_3_SCHED_SIM_H
 #define PROJECT_3_SCHED_SIM_H
 
+// TODO: Move queue to separate files
+
 
 struct CPUInfo {
     int burst, time, active_process;
@@ -18,19 +20,25 @@ struct MethodStats {
     int context_switches;
 };
 
-// TODO: Queue should have the ability to grow and shrink
-// TODO: How to link process info struct here?
+// TODO: Queue should have the ability to grow and shrink? No bounds?
 struct Queue {
-    int front, rear;
+    int front, rear, size;
+    unsigned capacity;
     int *array;
 };
 
-void en_q(struct Queue *queue, int item);
+struct Queue *create_queue(unsigned capacity);
 
-void de_q(struct Queue *queue);
+int is_full(struct Queue *queue);
 
-void print_q(struct Queue *queue);
+int is_empty(struct Queue *queue);
 
-void clean_q(struct Queue *);
+void enqueue(struct Queue *queue, int item);
+
+int dequeue(struct Queue *queue);
+
+void print_queue(struct Queue *queue);
+
+void clean_queue(struct Queue *);
 
 #endif //PROJECT_3_SCHED_SIM_H
