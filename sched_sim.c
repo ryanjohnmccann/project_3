@@ -1,9 +1,13 @@
+// TODO: Update doc strings
 
+// Standard imports
 #include <stdio.h>
 
+// Header file imports
 #include "sched_sim.h"
 #include "queue.h"
 
+// Global variables
 struct CPUInfo cpu_info;
 struct MethodStats method_stats[4];
 
@@ -51,6 +55,8 @@ void print_cpu(int pid, int second_pid, int burst) {
     printf("\n\n");
 }
 
+// TODO: Handle load and finish states when CPU burst is equal to one
+// TODO: Need to subtract sooner
 void fcfs(int snapshot) {
     int load_pid = -1;
     int run_pid = -1;
@@ -65,14 +71,14 @@ void fcfs(int snapshot) {
             dequeue(arrival_queue);
         }
 
-        // Currently, running a process
+        // Running a process
         if (run_pid != -1) {
             if (process_info[run_pid].burst != 0) {
                 process_info[run_pid].burst -= 1;
             }
             // Will finish this process in the next cycle, potentially load another process
             if (process_info[run_pid].burst == 0) {
-                // Load the next process
+                // Load the next process while finishing
                 if (!is_empty(ready_queue)) {
                     cpu_info.state = 'M';
                     load_pid = dequeue(ready_queue);
@@ -88,10 +94,10 @@ void fcfs(int snapshot) {
         }
             // Not running and something in the ready queue, load a new process
         else if (!is_empty(ready_queue) && load_pid == -1) {
-            load_pid = dequeue(ready_queue);
+            load_pid = front(ready_queue);
             cpu_info.state = 'L';
         }
-            // Loaded a new process and nothing running, start running
+            // Loaded a new process in the prior cycle and nothing running now, start running
         else if (load_pid != -1) {
             run_pid = load_pid;
             load_pid = -1;
@@ -104,6 +110,7 @@ void fcfs(int snapshot) {
             // Loading
             if (cpu_info.state == 'L') {
                 print_cpu(load_pid, -1, process_info[load_pid].burst);
+                dequeue(ready_queue);
             }
                 // Running or just finishing (with no load)
             else if (cpu_info.state == 'R' || cpu_info.state == 'F') {
