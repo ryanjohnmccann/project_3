@@ -1,5 +1,6 @@
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <limits.h>
 
 #include "queue.h"
@@ -9,7 +10,8 @@
 struct Queue *create_queue(int capacity) {
     struct Queue *queue = (struct Queue *) malloc(sizeof(struct Queue));
     queue->capacity = capacity;
-    queue->front = queue->size = 0;
+    queue->front = 0;
+    queue->size = 0;
 
     queue->rear = capacity - 1;
     queue->array = (int *) malloc(queue->capacity * sizeof(int));
@@ -57,7 +59,16 @@ int rear(struct Queue *queue) {
 void clean_queue(struct Queue *queue) {
 }
 
-// TODO: Implement
 void print_queue(struct Queue *queue) {
-
+    int i;
+    if (queue->size == 0) {
+        printf("empty");
+    } else {
+        for (i = queue->front; i <= queue->rear; i++) {
+            printf("%i", queue->array[i]);
+            if (i != queue->rear && queue->size > 1) {
+                printf("-");
+            }
+        }
+    }
 }

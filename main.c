@@ -41,6 +41,7 @@ void init_queues(const char *file_name) {
             process_info[arr_index].turn_time = 0;
         } else if (data_count == 2) {
             process_info[arr_index].priority = curr_num;
+            // End of single process data
         } else if (data_count == 3) {
             process_info[arr_index].arrival = curr_num;
             data_count = 0;
@@ -55,7 +56,7 @@ void init_queues(const char *file_name) {
     ready_queue = create_queue(arr_len);
     finished_queue = create_queue(arr_len);
 
-    // Add processes to arrival queue
+    // Add processes to arrival queue in order (file should be sorted)
     arrival_queue = create_queue(arr_len);
     for (int i = 0; i < arr_len; i++) {
         enqueue(arrival_queue, process_info[i].pid);
