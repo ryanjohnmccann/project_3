@@ -55,7 +55,6 @@ int rear(struct Queue *queue) {
 
 // TODO: Implement
 void clean_queue(struct Queue *queue) {
-
 }
 
 // TODO: Implement
