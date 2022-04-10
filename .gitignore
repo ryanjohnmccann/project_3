@@ -1,2 +1,10 @@
+# Clion stuff
 .idea
+
+# Build
 cmake-build-debug
+
+# Data files
+*.dat
+# Text files
+*.txt
