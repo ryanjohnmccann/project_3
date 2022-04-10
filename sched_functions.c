@@ -1,6 +1,8 @@
 
+// Standard imports
 #include <stdio.h>
 
+// Header file imports
 #include "queue.h"
 #include "sched_functions.h"
 #include "sched_sim.h"

@@ -1,6 +1,5 @@
 // TODO: Update doc strings
 // TODO: Change print to write to output file
-// TODO: Export helpful functions to different file?
 
 // Standard imports
 #include <stdio.h>
@@ -57,6 +56,7 @@ void fcfs(int snapshot) {
         if (run_pid != -1) {
             cpu_info.state = 'R';
             process_info[run_pid].burst -= 1;
+            // Process may or may not be finished, function determines if still running and if not will handle it
             handle_finished_process();
         }
             // Not running and something in the ready queue, load a new process
@@ -71,11 +71,14 @@ void fcfs(int snapshot) {
             cpu_info.state = 'R';
             method_stats[0].context_switches += 1;
             process_info[run_pid].burst -= 1;
+            // Process may or may not be finished, function determines if still running and if not will handle it
             handle_finished_process();
         }
 
+        // Determines if we need to print cpu contents
         handle_cpu_print();
 
+        // Update wait times (if needed) each cycle
         calculate_wait();
 
         // Finished running a process in this cycle, reset run_pid
@@ -87,8 +90,6 @@ void fcfs(int snapshot) {
 
         // Check if finished
         if (is_empty(arrival_queue) && is_empty(ready_queue) && load_pid == -1 && run_pid == -1) {
-            // Calculate turnaround times
-
             printf("*********************************************************\n");
             printf("FCFS Summary (WT = wait time, TT = turnaround time):\n\n");
             print_summary(0);

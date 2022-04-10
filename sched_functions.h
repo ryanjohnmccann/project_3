@@ -12,4 +12,4 @@ void handle_finished_process();
 
 void calculate_wait();
 
-#endif //PROJECT_3_SCHED_FUNCTIONS_H
+#endif
