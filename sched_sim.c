@@ -21,8 +21,7 @@ int run_pid, load_pid;
 
 void init_sim(int method_num) {
     cpu_info.time = 0;
-    cpu_info.burst = -1;
-    cpu_info.active_process = -1;
+    method_stats[method_num].context_switches = 0;
     // Invalid state
     cpu_info.state = 'N';
 
@@ -58,10 +57,6 @@ void print_cpu(int pid, int second_pid, int burst) {
     printf("\n\n");
 }
 
-void print_summary() {
-
-}
-
 void handle_cpu_print() {
     if ((cpu_info.time % cpu_info.snapshot) == 0 || (cpu_info.snapshot == 1 && cpu_info.time == 0)) {
         // Loading
@@ -77,6 +72,13 @@ void handle_cpu_print() {
             print_cpu(run_pid, load_pid, process_info[load_pid].burst);
         }
     }
+}
+
+void print_summary(int method_num) {
+    printf("Process sequence: ");
+    print_queue(finished_queue);
+    printf("\n");
+    printf("Context switches %i\n", method_stats[method_num].context_switches);
 }
 
 void handle_finished_process() {
@@ -129,6 +131,7 @@ void fcfs(int snapshot) {
             run_pid = load_pid;
             load_pid = -1;
             cpu_info.state = 'R';
+            method_stats[0].context_switches += 1;
             process_info[run_pid].burst -= 1;
             handle_finished_process();
         }
@@ -144,7 +147,9 @@ void fcfs(int snapshot) {
 
         // Check if finished
         if (is_empty(arrival_queue) && is_empty(ready_queue) && load_pid == -1 && run_pid == -1) {
-            print_summary();
+            printf("*********************************************************\n");
+            printf("FCFS Summary (WT = wait time, TT = turnaround time):\n");
+            print_summary(0);
             finished = 1;
         }
     }

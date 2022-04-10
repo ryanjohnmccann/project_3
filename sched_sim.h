@@ -2,14 +2,12 @@
 #define PROJECT_3_SCHED_SIM_H
 
 struct CPUInfo {
-    int burst, time, active_process, snapshot;
+    int time, snapshot;
     char state;
-    // TODO: Past run processes (ordered list) (queue?)
 };
 
 struct ProcessInfo {
-    int pid, burst, priority, arrival, wait, turn_time;
-    // TODO: Other helper data? (Make sure loading is handled correctly?)
+    int pid, burst, priority, arrival, wait, turn_time, finished;
 };
 
 struct MethodStats {

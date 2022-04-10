@@ -80,6 +80,10 @@ int main(int argc, char *argv[]) {
             init_sim(0);
             fcfs(snap_interval);
         }
+        // Shortest job first
+        if (mode_select == 1) {
+
+        }
     }
 
     return 0;
