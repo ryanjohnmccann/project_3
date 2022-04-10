@@ -1,5 +1,4 @@
 // TODO: Update doc strings
-// TODO: Cite where you took code
 
 // Standard imports
 #include <stdio.h>

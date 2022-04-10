@@ -1,4 +1,5 @@
 // TODO: Update doc strings
+// TODO: Clean and make more efficient
 
 // Standard imports
 #include <stdio.h>
@@ -39,7 +40,7 @@ void print_cpu(int pid, int second_pid, int burst) {
         printf("CPU: Running process %i (remaining CPU burst = %i)\n", pid, burst);
     }
         // Finishing and loading
-    else if (cpu_info.state == 'M') {
+    else if (cpu_info.state == 'B') {
         printf("CPU: Finishing process %i; loading process %i (CPU burst = %i)\n", pid, second_pid, burst);
     }
         // Finishing
@@ -80,7 +81,7 @@ void fcfs(int snapshot) {
             if (process_info[run_pid].burst == 0) {
                 // Load the next process while finishing
                 if (!is_empty(ready_queue)) {
-                    cpu_info.state = 'M';
+                    cpu_info.state = 'B';
                     load_pid = dequeue(ready_queue);
                 } else {
                     cpu_info.state = 'F';
@@ -103,6 +104,17 @@ void fcfs(int snapshot) {
             load_pid = -1;
             cpu_info.state = 'R';
             process_info[run_pid].burst -= 1;
+            if (process_info[run_pid].burst == 0) {
+                if (!is_empty(ready_queue)) {
+                    cpu_info.state = 'B';
+                    load_pid = dequeue(ready_queue);
+                }
+                else {
+                    cpu_info.state = 'F';
+                    run_pid = -1;
+                }
+                enqueue(finished_queue, run_pid);
+            }
         }
 
         // Print
@@ -120,7 +132,7 @@ void fcfs(int snapshot) {
                 }
             }
                 // Finishing and loading
-            else if (cpu_info.state == 'M') {
+            else if (cpu_info.state == 'B') {
                 print_cpu(run_pid, load_pid, process_info[load_pid].burst);
                 run_pid = -1;
             }
