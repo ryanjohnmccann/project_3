@@ -1,6 +1,5 @@
 // TODO: Update doc strings
-// TODO: Clean and make more efficient
-// TODO: Write to output files
+// TODO: Change print to write to output file
 
 // Standard imports
 #include <stdio.h>
@@ -59,7 +58,27 @@ void print_cpu(int pid, int second_pid, int burst) {
     printf("\n\n");
 }
 
-// TODO: Better function name
+void print_summary() {
+
+}
+
+void handle_cpu_print() {
+    if ((cpu_info.time % cpu_info.snapshot) == 0 || (cpu_info.snapshot == 1 && cpu_info.time == 0)) {
+        // Loading
+        if (cpu_info.state == 'L') {
+            print_cpu(load_pid, -1, process_info[load_pid].burst);
+        }
+            // Running or just finishing (with no load)
+        else if (cpu_info.state == 'R' || cpu_info.state == 'F') {
+            print_cpu(run_pid, -1, process_info[run_pid].burst);
+        }
+            // Finishing and loading
+        else if (cpu_info.state == 'B') {
+            print_cpu(run_pid, load_pid, process_info[load_pid].burst);
+        }
+    }
+}
+
 void handle_finished_process() {
     if (process_info[run_pid].burst <= 0) {
         // Load the next process while finishing
@@ -78,6 +97,7 @@ void fcfs(int snapshot) {
 
     load_pid = -1;
     run_pid = -1;
+    cpu_info.snapshot = snapshot;
 
     printf("***** FCFS Scheduling *****\n");
     while (!finished) {
@@ -88,6 +108,7 @@ void fcfs(int snapshot) {
             dequeue(arrival_queue);
         }
 
+        // Last cycle was a loading state, process is ready to be removed from the ready queue
         if (cpu_info.state == 'L') {
             dequeue(ready_queue);
         }
@@ -112,22 +133,9 @@ void fcfs(int snapshot) {
             handle_finished_process();
         }
 
-        // Print
-        if ((cpu_info.time % snapshot) == 0 || (snapshot == 1 && cpu_info.time == 0)) {
-            // Loading
-            if (cpu_info.state == 'L') {
-                print_cpu(load_pid, -1, process_info[load_pid].burst);
-            }
-                // Running or just finishing (with no load)
-            else if (cpu_info.state == 'R' || cpu_info.state == 'F') {
-                print_cpu(run_pid, -1, process_info[run_pid].burst);
-            }
-                // Finishing and loading
-            else if (cpu_info.state == 'B') {
-                print_cpu(run_pid, load_pid, process_info[load_pid].burst);
-            }
-        }
+        handle_cpu_print();
 
+        // Finished running a process in this cycle, reset run_pid
         if (cpu_info.state == 'F' || cpu_info.state == 'B') {
             run_pid = -1;
         }
@@ -136,6 +144,7 @@ void fcfs(int snapshot) {
 
         // Check if finished
         if (is_empty(arrival_queue) && is_empty(ready_queue) && load_pid == -1 && run_pid == -1) {
+            print_summary();
             finished = 1;
         }
     }

@@ -2,7 +2,7 @@
 #define PROJECT_3_SCHED_SIM_H
 
 struct CPUInfo {
-    int burst, time, active_process;
+    int burst, time, active_process, snapshot;
     char state;
     // TODO: Past run processes (ordered list) (queue?)
 };
