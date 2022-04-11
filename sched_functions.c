@@ -67,7 +67,7 @@ void print_summary(int method_num) {
     printf("PID\t\tWT\t\tTT\n");
     for (int i = front(finished_queue); i <= rear(finished_queue); i++) {
         printf("%.0f\t\t%.0f\t\t%.0f\n", process_info[i].pid, process_info[i].wait,
-               (process_info[i].finished + process_info[i].arrival));
+               (process_info[i].finished - process_info[i].arrival));
         method_stats[method_num].avg_wt += process_info[i].wait;
         // TODO: Only for non-preemptive
         method_stats[method_num].avg_tt += (process_info[i].finished - process_info[i].arrival);
@@ -79,7 +79,7 @@ void print_summary(int method_num) {
     printf("Process sequence: ");
     print_queue(finished_queue);
     printf("\n");
-    printf("Context switches %i\n\n", method_stats[method_num].context_switches);
+    printf("Context switches: %i\n\n", method_stats[method_num].context_switches);
 }
 
 void handle_finished_process() {
