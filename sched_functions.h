@@ -12,4 +12,6 @@ void handle_finished_process();
 
 void calculate_wait();
 
+int handle_nonpre_cycle();
+
 #endif

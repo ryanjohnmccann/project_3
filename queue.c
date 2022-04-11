@@ -4,6 +4,10 @@
 #include <limits.h>
 
 #include "queue.h"
+#include "sched_sim.h"
+
+// Global variables
+extern struct ProcessInfo process_info[100];
 
 // Source for Queue code: https://www.geeksforgeeks.org/queue-set-1introduction-and-array-implementation/
 
@@ -70,5 +74,48 @@ void print_queue(struct Queue *queue) {
                 printf("-");
             }
         }
+    }
+}
+
+int find_min(struct Queue *queue, char method, int sorted_index) {
+    int min_index = -1;
+    int min_val = INT_MAX;
+    for (int i = 0; i < queue->size; i++) {
+        int curr_pid = front(queue);
+        dequeue(queue);
+
+        if (method == 'b') {
+            if (process_info[curr_pid].burst < min_val && i <= sorted_index) {
+                min_index = i;
+                min_val = curr_pid;
+            }
+        }
+        enqueue(queue, curr_pid);
+
+    }
+    return min_index;
+}
+
+void insert_min_to_rear(struct Queue *queue, int min_index) {
+    int min_val;
+    for (int i = 0; i < queue->size; i++) {
+        int curr_pid = dequeue(queue);
+        if (i != min_index) {
+            enqueue(queue, curr_pid);
+        } else {
+            min_val = curr_pid;
+        }
+    }
+    enqueue(queue, min_val);
+}
+
+// TODO: Ask the professor if I can use this code
+// Code has been modified from source: https://www.geeksforgeeks.org/sorting-queue-without-extra-space/
+void sort_queue(struct Queue *queue, char method) {
+    for (int i = 1; i <= queue->size; i++) {
+        // Finds the pid with the minimum value
+        int min = find_min(queue, method, queue->size - i);
+        // Add to the back of the queue
+        insert_min_to_rear(queue, min);
     }
 }

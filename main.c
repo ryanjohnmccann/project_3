@@ -15,6 +15,8 @@ struct Queue *finished_queue;
 // TODO: Find a better way to do this
 struct ProcessInfo process_info[100];
 
+int snapshot;
+
 void init_queues(const char *file_name) {
     // Flush all prior contents and free allocated memory
     clean_queue(arrival_queue);
@@ -65,7 +67,7 @@ void init_queues(const char *file_name) {
 int main(int argc, char *argv[]) {
 
     // Snapshot interval
-    int snap_interval = atoi(argv[4]);
+    snapshot = atoi(argv[4]);
     const char *file_name = argv[2];
 
     // Use to select each scheduling algorithm
@@ -78,11 +80,12 @@ int main(int argc, char *argv[]) {
         if (mode_select == 0) {
             // Initialize a new simulation
             init_sim(0);
-            fcfs(snap_interval);
+            fcfs();
         }
         // Shortest job first
         if (mode_select == 1) {
-
+            init_sim(1);
+            sjf();
         }
     }
 

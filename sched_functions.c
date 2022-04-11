@@ -79,7 +79,7 @@ void print_summary(int method_num) {
     printf("Process sequence: ");
     print_queue(finished_queue);
     printf("\n");
-    printf("Context switches %i\n", method_stats[method_num].context_switches);
+    printf("Context switches %i\n\n", method_stats[method_num].context_switches);
 }
 
 void handle_finished_process() {
@@ -106,4 +106,51 @@ void calculate_wait() {
             }
         }
     }
+}
+
+int handle_nonpre_cycle() {
+    // Last cycle was a loading state, process is ready to be removed from the ready queue
+    if (cpu_info.state == 'L') {
+        dequeue(ready_queue);
+    }
+
+    // Running a process
+    if (run_pid != -1) {
+        cpu_info.state = 'R';
+        process_info[run_pid].burst -= 1;
+        // Process may or may not be finished, function determines if still running and if not will handle it
+        handle_finished_process();
+    }
+        // Not running and something in the ready queue, load a new process
+    else if (!is_empty(ready_queue) && load_pid == -1) {
+        load_pid = front(ready_queue);
+        cpu_info.state = 'L';
+    }
+        // Loaded a new process in the prior cycle and nothing running now, start running
+    else if (load_pid != -1) {
+        run_pid = load_pid;
+        load_pid = -1;
+        cpu_info.state = 'R';
+        method_stats[0].context_switches += 1;
+        process_info[run_pid].burst -= 1;
+        // Process may or may not be finished, function determines if still running and if not will handle it
+        handle_finished_process();
+    }
+
+    // Determines if we need to print cpu contents
+    handle_cpu_print();
+
+    // Update wait times (if needed) each cycle
+    calculate_wait();
+
+    // Finished running a process in this cycle, reset run_pid
+    if (cpu_info.state == 'F' || cpu_info.state == 'B') {
+        run_pid = -1;
+    }
+
+    cpu_info.time += 1;
+    if (is_empty(arrival_queue) && is_empty(ready_queue) && load_pid == -1 && run_pid == -1) {
+        return 1;
+    }
+    return 0;
 }
