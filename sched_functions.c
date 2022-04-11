@@ -1,3 +1,5 @@
+// TODO: There is a context switch bug\
+// TODO: Transfer prints to write to file
 
 // Standard imports
 #include <stdio.h>
@@ -63,7 +65,6 @@ void handle_cpu_print() {
     }
 }
 
-// TODO: Finished queue may not be in order!
 void print_summary(int method_num) {
     printf("PID\t\tWT\t\tTT\n");
 
@@ -116,7 +117,7 @@ void calculate_wait() {
     }
 }
 
-int handle_nonpre_cycle() {
+int handle_nonpre_cycle(int method_num) {
     // Last cycle was a loading state, process is ready to be removed from the ready queue
     if (cpu_info.state == 'L') {
         dequeue(ready_queue);
@@ -139,7 +140,7 @@ int handle_nonpre_cycle() {
         run_pid = load_pid;
         load_pid = -1;
         cpu_info.state = 'R';
-        method_stats[0].context_switches += 1;
+        method_stats[method_num].context_switches += 1;
         process_info[run_pid].burst -= 1;
         // Process may or may not be finished, function determines if still running and if not will handle it
         handle_finished_process();

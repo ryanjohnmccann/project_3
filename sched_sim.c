@@ -1,5 +1,3 @@
-// TODO: Update doc strings
-// TODO: Change print to write to output file
 
 // Standard imports
 #include <stdio.h>
@@ -60,7 +58,7 @@ void fcfs() {
             dequeue(arrival_queue);
         }
 
-        finished = handle_nonpre_cycle();
+        finished = handle_nonpre_cycle(0);
 
         // Check if finished
         if (finished) {
@@ -86,7 +84,7 @@ void sjf() {
             }
         }
 
-        finished = handle_nonpre_cycle();
+        finished = handle_nonpre_cycle(1);
 
         // Check if finished
         if (finished) {
@@ -111,7 +109,7 @@ void priority() {
             }
         }
 
-        finished = handle_nonpre_cycle();
+        finished = handle_nonpre_cycle(4);
 
         // Check if finished
         if (finished) {
