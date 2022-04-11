@@ -78,45 +78,35 @@ void print_queue(struct Queue *queue) {
     }
 }
 
-int find_min(struct Queue *queue, char method, int sorted_index) {
-    int min_index = -1;
-    int min_val = INT_MAX;
-    for (int i = 0; i < queue->size; i++) {
-        int curr_pid = front(queue);
-        dequeue(queue);
+// TODO: Ask the professor if I can use this code
+// Code has been modified from source: https://iq.opengenus.org/different-ways-to-sort-queue/
+// And: https://www.sanfoundry.com/c-program-sort-array-descending-order/
+void sort_queue(struct Queue *queue, char method) {
+    int tmp_arr[queue->size];
+    int tmp;
+    int size = 0;
+    // Add all elements to an array (dumb I know)
+    while (!is_empty(queue)) {
+        tmp_arr[size] = dequeue(queue);
+        size += 1;
+    }
 
-        if (method == 'b') {
-            if (process_info[curr_pid].burst < min_val && i <= sorted_index) {
-                min_index = i;
-                min_val = curr_pid;
+    // Sort array by burst time
+    if (method == 'b') {
+        for (int i = 0; i < size; i++) {
+            for (int j = i + 1; j < size; j++) {
+                if (process_info[tmp_arr[i]].burst > process_info[tmp_arr[j]].burst) {
+                    tmp = tmp_arr[i];
+                    tmp_arr[i] = tmp_arr[j];
+                    tmp_arr[j] = tmp;
+                }
             }
         }
-        enqueue(queue, curr_pid);
-
     }
-    return min_index;
-}
 
-void insert_min_to_rear(struct Queue *queue, int min_index) {
-    int min_val;
-    for (int i = 0; i < queue->size; i++) {
-        int curr_pid = dequeue(queue);
-        if (i != min_index) {
-            enqueue(queue, curr_pid);
-        } else {
-            min_val = curr_pid;
-        }
+    // Add items back to queue
+    for (int i = 0; i < size; i++) {
+        enqueue(queue, tmp_arr[i]);
     }
-    enqueue(queue, min_val);
-}
 
-// TODO: Ask the professor if I can use this code
-// Code has been modified from source: https://www.geeksforgeeks.org/sorting-queue-without-extra-space/
-void sort_queue(struct Queue *queue, char method) {
-    for (int i = 1; i <= queue->size; i++) {
-        // Finds the pid with the minimum value
-        int min = find_min(queue, method, queue->size - i);
-        // Add to the back of the queue
-        insert_min_to_rear(queue, min);
-    }
 }
