@@ -17,6 +17,7 @@ extern struct Queue *finished_queue;
 extern struct ProcessInfo process_info[100];
 
 extern int run_pid, load_pid;
+extern int arr_len;
 
 void print_cpu(float pid, float second_pid, float burst) {
     printf("t = %i\n", cpu_info.time);
@@ -62,21 +63,21 @@ void handle_cpu_print() {
     }
 }
 
+// TODO: Finished queue may not be in order!
 void print_summary(int method_num) {
-    int index;
-    float process_count = 0;
     printf("PID\t\tWT\t\tTT\n");
-    for (int i = front(finished_queue); i < finished_queue->size; i++) {
-        index = i % finished_queue->capacity;
-        printf("%.0f\t\t%.0f\t\t%.0f\n", process_info[index].pid, process_info[index].wait,
-               (process_info[index].finished - process_info[index].arrival));
-        method_stats[method_num].avg_wt += process_info[index].wait;
-        // TODO: Only for non-preemptive
-        method_stats[method_num].avg_tt += (process_info[index].finished - process_info[index].arrival);
-        process_count += 1;
+
+    for (int i = 0; i < arr_len; i++) {
+        printf("%.0f\t\t%.0f\t\t%.0f\n", process_info[i].pid, process_info[i].wait,
+               (process_info[i].finished - process_info[i].arrival));
+        method_stats[method_num].avg_wt += process_info[i].wait;
+        // TODO: Only for non-preemptive?
+        method_stats[method_num].avg_tt += (process_info[i].finished - process_info[i].arrival);
     }
-    method_stats[method_num].avg_wt /= process_count;
-    method_stats[method_num].avg_tt /= process_count;
+
+    method_stats[method_num].avg_wt /= ((float) arr_len);
+    method_stats[method_num].avg_tt /= ((float) arr_len);
+
     printf("AVG\t\t%.2f\t%.2f\n\n", method_stats[method_num].avg_wt, method_stats[method_num].avg_tt);
     printf("Process sequence: ");
     print_queue(finished_queue);

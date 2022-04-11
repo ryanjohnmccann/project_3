@@ -1,8 +1,6 @@
 // TODO: Update doc strings
 // TODO: Change print to write to output file
 
-// TODO: The fron and back points to the array index!
-
 // Standard imports
 #include <stdio.h>
 
@@ -123,4 +121,6 @@ void priority() {
         }
     }
 }
+
+// TODO: Create non-pre sim function to neaten up this code
 
