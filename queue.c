@@ -79,12 +79,12 @@ void print_queue(struct Queue *queue) {
 }
 
 // TODO: Ask the professor if I can use this code
-// Code has been modified from source: https://iq.opengenus.org/different-ways-to-sort-queue/
-// And: https://www.sanfoundry.com/c-program-sort-array-descending-order/
+// Code has been modified from source: https://www.sanfoundry.com/c-program-sort-array-descending-order/
 void sort_queue(struct Queue *queue, char method) {
     int tmp_arr[queue->size];
     int tmp;
     int size = 0;
+
     // Add all elements to an array (dumb I know)
     while (!is_empty(queue)) {
         tmp_arr[size] = dequeue(queue);

@@ -88,7 +88,7 @@ void handle_finished_process() {
         // Load the next process while finishing
         if (!is_empty(ready_queue)) {
             cpu_info.state = 'B';
-            load_pid = dequeue(ready_queue);
+            load_pid = front(ready_queue);
         } else {
             cpu_info.state = 'F';
         }
@@ -139,6 +139,11 @@ int handle_nonpre_cycle() {
 
     // Determines if we need to print cpu contents
     handle_cpu_print();
+
+    // Don't dequeue from the ready queue until after we print
+    if (cpu_info.state == 'B') {
+        dequeue(ready_queue);
+    }
 
     // Update wait times (if needed) each cycle
     calculate_wait();
