@@ -15,17 +15,13 @@ struct Queue *finished_queue;
 // TODO: Find a better way to do this
 struct ProcessInfo process_info[100];
 
-int snapshot;
+int snapshot, arr_len;
 
 void init_queues(const char *file_name) {
-    // Flush all prior contents and free allocated memory
-    clean_queue(arrival_queue);
-    clean_queue(ready_queue);
-    clean_queue(finished_queue);
 
     // Read file content and store into arrival queue
     FILE *fp;
-    int arr_len = 0;
+    arr_len = 0;
     int arr_index = 0;
     int pid = 0;
     int data_count = 1;
@@ -53,9 +49,6 @@ void init_queues(const char *file_name) {
         data_count += 1;
     }
     fclose(fp);
-
-    ready_queue = create_queue(arr_len);
-    finished_queue = create_queue(arr_len);
 
     // Add processes to arrival queue in order (file should be sorted)
     arrival_queue = create_queue(arr_len);

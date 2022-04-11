@@ -1,6 +1,8 @@
 // TODO: Update doc strings
 // TODO: Change print to write to output file
 
+// TODO: The fron and back points to the array index!
+
 // Standard imports
 #include <stdio.h>
 
@@ -19,10 +21,18 @@ extern struct Queue *finished_queue;
 extern struct ProcessInfo process_info[100];
 
 extern int snapshot;
+extern int arr_len;
 
 int run_pid, load_pid, finished;
 
 void init_sim(int method_num) {
+    // Flush all prior contents and free allocated memory
+    clean_queue(ready_queue);
+    clean_queue(finished_queue);
+
+    ready_queue = create_queue(arr_len);
+    finished_queue = create_queue(arr_len);
+
     cpu_info.time = 0;
     method_stats[method_num].context_switches = 0;
     // Invalid state
@@ -64,12 +74,12 @@ void sjf() {
         // Add by pid since file is organized by arrival time
         while (!is_empty(arrival_queue) && process_info[front(arrival_queue)].arrival <= cpu_info.time) {
 
-            // Rearrange ready queue by burst time
-            if (!is_empty(ready_queue)) {
-                sort_queue(ready_queue, 'b');
-            }
             enqueue(ready_queue, process_info[front(arrival_queue)].pid);
             dequeue(arrival_queue);
+            // Rearrange ready queue by burst time
+            if (ready_queue->size > 1) {
+                sort_queue(ready_queue, 'b');
+            }
         }
 
         finished = handle_nonpre_cycle();
