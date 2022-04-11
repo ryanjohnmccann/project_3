@@ -65,12 +65,13 @@ void clean_queue(struct Queue *queue) {
 }
 
 void print_queue(struct Queue *queue) {
-    int i;
+    int i, index;
     if (queue->size == 0) {
         printf("empty");
     } else {
-        for (i = queue->front; i <= queue->rear; i++) {
-            printf("%i", queue->array[i]);
+        for (i = queue->front; i < queue->size; i++) {
+            index = i % queue->capacity;
+            printf("%i", queue->array[index]);
             if (i != queue->rear && queue->size > 1) {
                 printf("-");
             }
@@ -96,6 +97,16 @@ void sort_queue(struct Queue *queue, char method) {
         for (int i = 0; i < size; i++) {
             for (int j = i + 1; j < size; j++) {
                 if (process_info[tmp_arr[i]].burst > process_info[tmp_arr[j]].burst) {
+                    tmp = tmp_arr[i];
+                    tmp_arr[i] = tmp_arr[j];
+                    tmp_arr[j] = tmp;
+                }
+            }
+        }
+    } else if (method == 'p') {
+        for (int i = 0; i < size; i++) {
+            for (int j = i + 1; j < size; j++) {
+                if (process_info[tmp_arr[i]].priority > process_info[tmp_arr[j]].priority) {
                     tmp = tmp_arr[i];
                     tmp_arr[i] = tmp_arr[j];
                     tmp_arr[j] = tmp;

@@ -75,10 +75,13 @@ int main(int argc, char *argv[]) {
             init_sim(0);
             fcfs();
         }
-        // Shortest job first
-        if (mode_select == 1) {
+            // Shortest job first
+        else if (mode_select == 1) {
             init_sim(1);
             sjf();
+        } else if (mode_select == 4) {
+            init_sim(4);
+            priority();
         }
     }
 

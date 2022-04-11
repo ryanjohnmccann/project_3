@@ -21,4 +21,6 @@ void fcfs();
 
 void sjf();
 
+void priority();
+
 #endif

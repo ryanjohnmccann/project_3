@@ -63,14 +63,16 @@ void handle_cpu_print() {
 }
 
 void print_summary(int method_num) {
+    int index;
     float process_count = 0;
     printf("PID\t\tWT\t\tTT\n");
-    for (int i = front(finished_queue); i <= rear(finished_queue); i++) {
-        printf("%.0f\t\t%.0f\t\t%.0f\n", process_info[i].pid, process_info[i].wait,
-               (process_info[i].finished - process_info[i].arrival));
-        method_stats[method_num].avg_wt += process_info[i].wait;
+    for (int i = front(finished_queue); i < finished_queue->size; i++) {
+        index = i % finished_queue->capacity;
+        printf("%.0f\t\t%.0f\t\t%.0f\n", process_info[index].pid, process_info[index].wait,
+               (process_info[index].finished - process_info[index].arrival));
+        method_stats[method_num].avg_wt += process_info[index].wait;
         // TODO: Only for non-preemptive
-        method_stats[method_num].avg_tt += (process_info[i].finished - process_info[i].arrival);
+        method_stats[method_num].avg_tt += (process_info[index].finished - process_info[index].arrival);
         process_count += 1;
     }
     method_stats[method_num].avg_wt /= process_count;
@@ -97,14 +99,19 @@ void handle_finished_process() {
 }
 
 void calculate_wait() {
-    int i;
-    if (!is_empty(ready_queue)) {
-        for (i = front(ready_queue); i <= rear(ready_queue); i++) {
-            // Do not count a loading process as waiting
-            if (i != load_pid) {
-                process_info[i].wait += 1;
-            }
+    int size = 0;
+    int tmp_arr[ready_queue->size];
+
+    while (!is_empty(ready_queue)) {
+        tmp_arr[size] = dequeue(ready_queue);
+        size += 1;
+    }
+
+    for (int i = 0; i < size; i++) {
+        if (process_info[tmp_arr[i]].pid != load_pid) {
+            process_info[tmp_arr[i]].wait += 1;
         }
+        enqueue(ready_queue, tmp_arr[i]);
     }
 }
 

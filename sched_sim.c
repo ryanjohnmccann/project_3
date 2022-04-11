@@ -33,6 +33,12 @@ void init_sim(int method_num) {
     ready_queue = create_queue(arr_len);
     finished_queue = create_queue(arr_len);
 
+    for (int i = 0; i < arr_len; i++) {
+        process_info[i].wait = 0;
+        process_info[i].finished = 0;
+        process_info[i].turn_time = 0;
+    }
+
     cpu_info.time = 0;
     method_stats[method_num].context_switches = 0;
     // Invalid state
@@ -89,6 +95,31 @@ void sjf() {
             printf("*********************************************************\n");
             printf("SJF Summary (WT = wait time, TT = turnaround time):\n\n");
             print_summary(1);
+        }
+    }
+}
+
+void priority() {
+    printf("***** Priority Scheduling *****\n");
+    while (!finished) {
+        // Add by pid since file is organized by arrival time
+        while (!is_empty(arrival_queue) && process_info[front(arrival_queue)].arrival <= cpu_info.time) {
+
+            enqueue(ready_queue, process_info[front(arrival_queue)].pid);
+            dequeue(arrival_queue);
+            // Rearrange ready queue by burst time
+            if (ready_queue->size > 1) {
+                sort_queue(ready_queue, 'p');
+            }
+        }
+
+        finished = handle_nonpre_cycle();
+
+        // Check if finished
+        if (finished) {
+            printf("*********************************************************\n");
+            printf("Priority Summary (WT = wait time, TT = turnaround time):\n\n");
+            print_summary(4);
         }
     }
 }
