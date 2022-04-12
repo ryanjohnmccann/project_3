@@ -23,4 +23,6 @@ void sjf();
 
 void priority();
 
+void stcf();
+
 #endif

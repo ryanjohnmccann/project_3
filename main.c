@@ -69,18 +69,17 @@ int main(int argc, char *argv[]) {
     for (mode_select = 0; mode_select < 5; mode_select++) {
         // Reset arrival queue
         init_queues(file_name);
+        init_sim(mode_select);
         // First come, first served
         if (mode_select == 0) {
-            // Initialize a new simulation
-            init_sim(0);
             fcfs();
         }
             // Shortest job first
         else if (mode_select == 1) {
-            init_sim(1);
             sjf();
+        } else if (mode_select == 2) {
+            stcf();
         } else if (mode_select == 4) {
-            init_sim(4);
             priority();
         }
     }

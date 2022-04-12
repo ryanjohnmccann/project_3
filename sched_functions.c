@@ -168,3 +168,15 @@ int handle_nonpre_cycle(int method_num) {
     }
     return 0;
 }
+
+void handle_arrival_queue(int will_sort, char sort_by) {
+    while (!is_empty(arrival_queue) && process_info[front(arrival_queue)].arrival <= cpu_info.time) {
+
+        enqueue(ready_queue, process_info[front(arrival_queue)].pid);
+        dequeue(arrival_queue);
+        // Rearrange ready queue by burst time
+        if (ready_queue->size > 1 && will_sort) {
+            sort_queue(ready_queue, sort_by);
+        }
+    }
+}

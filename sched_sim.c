@@ -51,12 +51,7 @@ void init_sim(int method_num) {
 void fcfs() {
     printf("***** FCFS Scheduling *****\n");
     while (!finished) {
-        // Add by pid since file is organized by arrival time
-        while (!is_empty(arrival_queue) && process_info[front(arrival_queue)].arrival <= cpu_info.time) {
-            // Add to ready queue, remove from arrival
-            enqueue(ready_queue, process_info[front(arrival_queue)].pid);
-            dequeue(arrival_queue);
-        }
+        handle_arrival_queue(0, 'n');
 
         finished = handle_nonpre_cycle(0);
 
@@ -73,16 +68,7 @@ void fcfs() {
 void sjf() {
     printf("***** SJF Scheduling *****\n");
     while (!finished) {
-        // Add by pid since file is organized by arrival time
-        while (!is_empty(arrival_queue) && process_info[front(arrival_queue)].arrival <= cpu_info.time) {
-
-            enqueue(ready_queue, process_info[front(arrival_queue)].pid);
-            dequeue(arrival_queue);
-            // Rearrange ready queue by burst time
-            if (ready_queue->size > 1) {
-                sort_queue(ready_queue, 'b');
-            }
-        }
+        handle_arrival_queue(1, 'b');
 
         finished = handle_nonpre_cycle(1);
 
@@ -98,16 +84,7 @@ void sjf() {
 void priority() {
     printf("***** Priority Scheduling *****\n");
     while (!finished) {
-        // Add by pid since file is organized by arrival time
-        while (!is_empty(arrival_queue) && process_info[front(arrival_queue)].arrival <= cpu_info.time) {
-
-            enqueue(ready_queue, process_info[front(arrival_queue)].pid);
-            dequeue(arrival_queue);
-            // Rearrange ready queue by burst time
-            if (ready_queue->size > 1) {
-                sort_queue(ready_queue, 'p');
-            }
-        }
+        handle_arrival_queue(1, 'p');
 
         finished = handle_nonpre_cycle(4);
 
@@ -118,6 +95,45 @@ void priority() {
             print_summary(4);
         }
     }
+}
+
+void stcf() {
+    printf("***** STCF Scheduling *****\n");
+     while (!finished) {
+         handle_arrival_queue(1, 'b');
+
+         // Add currently running process to queue and sort again, take the shortest burst time
+         // TODO: Possible that we're loading and running?
+         if (run_pid != -1) {
+             int old_run = run_pid;
+             enqueue(ready_queue, run_pid);
+             sort_queue(ready_queue, 'b');
+             run_pid = dequeue(ready_queue);
+             // Preempted, load another process
+             if (old_run != run_pid) {
+
+             }
+         }
+         else if (load_pid != -1) {
+             int old_load = load_pid;
+             enqueue(ready_queue, run_pid);
+             sort_queue(ready_queue, 'b');
+             load_pid = dequeue(ready_queue);
+             // Preempt a process after just one cycle
+             if (old_load != load_pid) {
+
+             }
+         }
+
+         finished = handle_nonpre_cycle(2);
+
+         // Check if finished
+         if (finished) {
+             printf("*********************************************************\n");
+             printf("STCF Summary (WT = wait time, TT = turnaround time):\n\n");
+             print_summary(2);
+         }
+     }
 }
 
 // TODO: Create non-pre sim function to neaten up this code
