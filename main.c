@@ -15,15 +15,13 @@ struct Queue *finished_queue;
 // TODO: Find a better way to do this
 struct ProcessInfo process_info[100];
 
+int snapshot, arr_len;
+
 void init_queues(const char *file_name) {
-    // Flush all prior contents and free allocated memory
-    clean_queue(arrival_queue);
-    clean_queue(ready_queue);
-    clean_queue(finished_queue);
 
     // Read file content and store into arrival queue
     FILE *fp;
-    int arr_len = 0;
+    arr_len = 0;
     int arr_index = 0;
     int pid = 0;
     int data_count = 1;
@@ -52,9 +50,6 @@ void init_queues(const char *file_name) {
     }
     fclose(fp);
 
-    ready_queue = create_queue(arr_len);
-    finished_queue = create_queue(arr_len);
-
     // Add processes to arrival queue in order (file should be sorted)
     arrival_queue = create_queue(arr_len);
     for (int i = 0; i < arr_len; i++) {
@@ -65,7 +60,7 @@ void init_queues(const char *file_name) {
 int main(int argc, char *argv[]) {
 
     // Snapshot interval
-    int snap_interval = atoi(argv[4]);
+    snapshot = atoi(argv[4]);
     const char *file_name = argv[2];
 
     // Use to select each scheduling algorithm
@@ -74,15 +69,18 @@ int main(int argc, char *argv[]) {
     for (mode_select = 0; mode_select < 5; mode_select++) {
         // Reset arrival queue
         init_queues(file_name);
+        init_sim(mode_select);
         // First come, first served
         if (mode_select == 0) {
-            // Initialize a new simulation
-            init_sim(0);
-            fcfs(snap_interval);
+            fcfs();
         }
-        // Shortest job first
-        if (mode_select == 1) {
-
+            // Shortest job first
+        else if (mode_select == 1) {
+            sjf();
+        } else if (mode_select == 2) {
+            stcf();
+        } else if (mode_select == 4) {
+            priority();
         }
     }
 

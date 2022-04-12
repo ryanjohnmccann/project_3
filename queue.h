@@ -27,4 +27,6 @@ void print_queue(struct Queue *queue);
 
 void clean_queue(struct Queue *queue);
 
+void sort_queue(struct Queue *queue, char method);
+
 #endif
