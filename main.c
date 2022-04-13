@@ -1,4 +1,5 @@
 // TODO: Update doc strings
+// TODO: Append to an array and allocate at the end
 
 // Standard imports
 #include <stdio.h>
@@ -67,6 +68,7 @@ int main(int argc, char *argv[]) {
     int mode_select;
     // Main simulation loop
     for (mode_select = 0; mode_select < 5; mode_select++) {
+        mode_select = 2;
         // Reset arrival queue
         init_queues(file_name);
         init_sim(mode_select);
@@ -82,6 +84,7 @@ int main(int argc, char *argv[]) {
         } else if (mode_select == 4) {
             priority();
         }
+        return 0;
     }
 
     return 0;

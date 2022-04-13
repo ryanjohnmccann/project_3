@@ -2,7 +2,7 @@
 #ifndef PROJECT_3_SCHED_FUNCTIONS_H
 #define PROJECT_3_SCHED_FUNCTIONS_H
 
-void print_cpu(float pid, float second_pid, float burst);
+void print_cpu(float pid, float second_pid, float burst, float second_burst);
 
 void handle_cpu_print();
 

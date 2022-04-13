@@ -19,7 +19,7 @@ extern struct ProcessInfo process_info[100];
 extern int snapshot;
 extern int arr_len;
 
-int run_pid, load_pid, finished;
+int run_pid, load_pid, finished, old_pid;
 
 void init_sim(int method_num) {
     // Flush all prior contents and free allocated memory
@@ -98,42 +98,52 @@ void priority() {
 }
 
 void stcf() {
+    // TODO: Fix "finished" queue
+    // TODO:
     printf("***** STCF Scheduling *****\n");
-     while (!finished) {
-         handle_arrival_queue(1, 'b');
+    while (!finished) {
+        handle_arrival_queue(1, 'b');
 
-         // Add currently running process to queue and sort again, take the shortest burst time
-         // TODO: Possible that we're loading and running?
-         if (run_pid != -1) {
-             int old_run = run_pid;
-             enqueue(ready_queue, run_pid);
-             sort_queue(ready_queue, 'b');
-             run_pid = dequeue(ready_queue);
-             // Preempted, load another process
-             if (old_run != run_pid) {
+        // Add currently running process to queue and sort again, take the shortest burst time
+        // TODO: Possible that we're loading and running?
+        // TODO: Fix this
+        if (run_pid != -1) {
+            if (!is_empty(ready_queue) &&
+                process_info[run_pid].burst > process_info[front(ready_queue)].burst) {
 
-             }
-         }
-         else if (load_pid != -1) {
-             int old_load = load_pid;
-             enqueue(ready_queue, run_pid);
-             sort_queue(ready_queue, 'b');
-             load_pid = dequeue(ready_queue);
-             // Preempt a process after just one cycle
-             if (old_load != load_pid) {
+                old_pid = run_pid;
+                run_pid = -1;
+                cpu_info.state = 'P';
+            }
+        } else if (load_pid != -1) {
+            // Preempt a loading process
+            if (!is_empty(ready_queue) &&
+                process_info[load_pid].burst - 1 > process_info[front(ready_queue)].burst) {
 
-             }
-         }
+                old_pid = load_pid;
+                cpu_info.state = 'P';
+                load_pid = -1;
+            }
+        }
 
-         finished = handle_nonpre_cycle(2);
+        finished = handle_nonpre_cycle(2);
+        if (cpu_info.state == 'P') {
+            // TODO: Not a good idea to have a bounded queue now!
+            enqueue(finished_queue, old_pid);
+            method_stats[2].context_switches += 1;
+            process_info[old_pid].burst -= 1;
+            enqueue(ready_queue, old_pid);
+            sort_queue(ready_queue, 'b');
+            cpu_info.state = 'L';
+        }
 
-         // Check if finished
-         if (finished) {
-             printf("*********************************************************\n");
-             printf("STCF Summary (WT = wait time, TT = turnaround time):\n\n");
-             print_summary(2);
-         }
-     }
+        // Check if finished
+        if (finished) {
+            printf("*********************************************************\n");
+            printf("STCF Summary (WT = wait time, TT = turnaround time):\n\n");
+            print_summary(2);
+        }
+    }
 }
 
 // TODO: Create non-pre sim function to neaten up this code
