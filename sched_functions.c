@@ -15,7 +15,7 @@ extern struct MethodStats method_stats[4];
 
 extern struct Queue *arrival_queue;
 extern struct Queue *ready_queue;
-extern struct Queue *finished_queue;
+extern struct Queue *sequence_queue;
 extern struct ProcessInfo process_info[100];
 
 extern int run_pid, load_pid, old_pid;
@@ -85,7 +85,7 @@ void print_summary(int method_num) {
 
     printf("AVG\t\t%.2f\t%.2f\n\n", method_stats[method_num].avg_wt, method_stats[method_num].avg_tt);
     printf("Process sequence: ");
-    print_queue(finished_queue);
+    print_queue(sequence_queue);
     printf("\n");
     printf("Context switches: %i\n\n", method_stats[method_num].context_switches);
 }
@@ -96,20 +96,21 @@ void handle_finished_process() {
         // Load the next process while finishing
         if (!is_empty(ready_queue)) {
             cpu_info.state = 'B';
-            load_pid = front(ready_queue);
+            load_pid = ready_queue->front->key;
         } else {
             cpu_info.state = 'F';
         }
-        enqueue(finished_queue, run_pid);
+        enqueue(sequence_queue, run_pid);
     }
 }
 
 void calculate_wait() {
     int size = 0;
-    int tmp_arr[ready_queue->size];
+    int tmp_arr[get_size(ready_queue)];
 
     while (!is_empty(ready_queue)) {
-        tmp_arr[size] = dequeue(ready_queue);
+        tmp_arr[size] = ready_queue->front->key;
+        dequeue(ready_queue);
         size += 1;
     }
 
@@ -121,7 +122,7 @@ void calculate_wait() {
     }
 }
 
-int handle_nonpre_cycle(int method_num) {
+int handle_cycle(int method_num) {
     // Last cycle was a loading state, process is ready to be removed from the ready queue
     if (cpu_info.state == 'L') {
         dequeue(ready_queue);
@@ -136,7 +137,7 @@ int handle_nonpre_cycle(int method_num) {
     }
         // Not running and something in the ready queue, load a new process
     else if (!is_empty(ready_queue) && load_pid == -1) {
-        load_pid = front(ready_queue);
+        load_pid = ready_queue->front->key;
         if (cpu_info.state != 'P') {
             cpu_info.state = 'L';
         }
@@ -176,12 +177,12 @@ int handle_nonpre_cycle(int method_num) {
 }
 
 void handle_arrival_queue(int will_sort, char sort_by) {
-    while (!is_empty(arrival_queue) && process_info[front(arrival_queue)].arrival <= cpu_info.time) {
+    while (!is_empty(arrival_queue) && process_info[arrival_queue->front->key].arrival <= cpu_info.time) {
 
-        enqueue(ready_queue, process_info[front(arrival_queue)].pid);
+        enqueue(ready_queue, process_info[arrival_queue->front->key].pid);
         dequeue(arrival_queue);
         // Rearrange ready queue by burst time
-        if (ready_queue->size > 1 && will_sort) {
+        if (get_size(ready_queue) > 1 && will_sort) {
             sort_queue(ready_queue, sort_by);
         }
     }

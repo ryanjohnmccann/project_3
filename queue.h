@@ -1,32 +1,35 @@
 #ifndef PROJECT_3_QUEUE_H
 #define PROJECT_3_QUEUE_H
 
-// Source for queue code: https://www.geeksforgeeks.org/queue-set-1introduction-and-array-implementation/
+// Source for queue code: https://www.geeksforgeeks.org/queue-linked-list-implementation/
 
-// TODO: Queue should have the ability to grow and shrink? No bounds?
+// A linked list (LL) node to store a queue entry
+struct QNode {
+    int key;
+    struct QNode *next;
+};
+// The queue, front stores the front node of LL and rear stores the
+// last node of LL
 struct Queue {
-    int front, rear, size, capacity;
-    int *array;
+    struct QNode *front, *rear;
 };
 
-struct Queue *create_queue(int capacity);
+struct QNode *new_node(int k);
 
-int is_full(struct Queue *queue);
+struct Queue *create_queue();
 
-int is_empty(struct Queue *queue);
+void enqueue(struct Queue *q, int k);
 
-void enqueue(struct Queue *queue, int item);
+void dequeue(struct Queue *q);
 
-int dequeue(struct Queue *queue);
+void clean_queue(struct Queue *q);
 
-int front(struct Queue *queue);
+int is_empty(struct Queue *q);
 
-int rear(struct Queue *queue);
+void print_queue(struct Queue *q);
 
-void print_queue(struct Queue *queue);
+int get_size(struct Queue *q);
 
-void clean_queue(struct Queue *queue);
-
-void sort_queue(struct Queue *queue, char method);
+void sort_queue(struct Queue *q, char method);
 
 #endif

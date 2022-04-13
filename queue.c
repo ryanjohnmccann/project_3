@@ -1,113 +1,126 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <limits.h>
 
 #include "queue.h"
 #include "sched_sim.h"
 
-// Global variables
 extern struct ProcessInfo process_info[100];
 
-extern int arr_len;
+// Source for queue code: https://www.geeksforgeeks.org/queue-linked-list-implementation/
 
-// Source for Queue code: https://www.geeksforgeeks.org/queue-set-1introduction-and-array-implementation/
-
-struct Queue *create_queue(int capacity) {
-    struct Queue *queue = (struct Queue *) malloc(sizeof(struct Queue));
-    queue->capacity = capacity;
-    queue->front = 0;
-    queue->size = 0;
-
-    queue->rear = capacity - 1;
-    queue->array = (int *) malloc(queue->capacity * sizeof(int));
-    return queue;
+// A utility function to create a new linked list node.
+struct QNode *new_node(int k) {
+    struct QNode *temp = (struct QNode *) malloc(sizeof(struct QNode));
+    temp->key = k;
+    temp->next = NULL;
+    return temp;
 }
 
-int is_full(struct Queue *queue) {
-    return (queue->size == queue->capacity);
+// A utility function to create an empty queue
+struct Queue *create_queue() {
+    struct Queue *q = (struct Queue *) malloc(sizeof(struct Queue));
+    q->front = q->rear = NULL;
+    return q;
 }
 
-int is_empty(struct Queue *queue) {
-    return (queue->size == 0);
-}
+// The function to add a key k to q
+void enqueue(struct Queue *q, int k) {
+    // Create a new LL node
+    struct QNode *temp = new_node(k);
 
-void enqueue(struct Queue *queue, int item) {
-    if (is_full(queue))
+    // If queue is empty, then new node is front and rear both
+    if (q->rear == NULL) {
+        q->front = q->rear = temp;
         return;
-    queue->rear = (queue->rear + 1) % queue->capacity;
-    queue->array[queue->rear] = item;
-    queue->size = queue->size + 1;
-}
-
-int dequeue(struct Queue *queue) {
-    if (is_empty(queue))
-        return INT_MIN;
-    int item = queue->array[queue->front];
-    queue->front = (queue->front + 1) % queue->capacity;
-    queue->size = queue->size - 1;
-    return item;
-}
-
-int front(struct Queue *queue) {
-    if (is_empty(queue))
-        return INT_MIN;
-    return queue->array[queue->front];
-}
-
-int rear(struct Queue *queue) {
-    if (is_empty(queue))
-        return INT_MIN;
-    return queue->array[queue->rear];
-}
-
-// TODO: Implement
-void clean_queue(struct Queue *queue) {
-
-}
-
-int transfer_queue_arr(struct Queue *queue, int *arr) {
-    int size = 0;
-    // Add all elements to an array (dumb I know)
-    while (!is_empty(queue)) {
-        arr[size] = dequeue(queue);
-        size += 1;
     }
-    return size;
+
+    // Add the new node at the end of queue and change rear
+    q->rear->next = temp;
+    q->rear = temp;
 }
 
-void transfer_arr_queue(struct Queue *queue, int *arr, int size) {
-    // Add items back to queue
-    for (int i = 0; i < size; i++) {
-        enqueue(queue, arr[i]);
+// Function to remove a key from given queue q
+void dequeue(struct Queue *q) {
+    // If queue is empty, return NULL.
+    if (q->front == NULL)
+        return;
+
+    // Store previous front and move front one node ahead
+    struct QNode *temp = q->front;
+
+    q->front = q->front->next;
+
+    // If front becomes NULL, then change rear also as NULL
+    if (q->front == NULL)
+        q->rear = NULL;
+
+    free(temp);
+}
+
+void clean_queue(struct Queue *q) {
+    while (!is_empty(q)) {
+        dequeue(q);
     }
 }
 
-void print_queue(struct Queue *queue) {
+int is_empty(struct Queue *q) {
+    if (q->front == NULL && q->rear == NULL) {
+        return 1;
+    }
+    return 0;
+}
 
-    int tmp_arr[queue->size];
-    int size = transfer_queue_arr(queue, tmp_arr);
-
-    if (size == 0) {
+void print_queue(struct Queue *q) {
+    struct QNode *tmp_node = q->front;
+    if (tmp_node == NULL) {
         printf("empty");
     } else {
-        for (int i = 0; i < size; i++) {
-            printf("%i", tmp_arr[i]);
-            if (size > 1 && i != size - 1) {
+        while (tmp_node != NULL) {
+            printf("%i", tmp_node->key);
+            tmp_node = tmp_node->next;
+            if (tmp_node != NULL) {
                 printf("-");
             }
         }
     }
-    transfer_arr_queue(queue, tmp_arr, size);
 }
 
-// TODO: Ask the professor if I can use this code
+int get_size(struct Queue *q) {
+    int size = 0;
+    struct QNode *tmp_node = q->front;
+    while (tmp_node != NULL) {
+        size += 1;
+        tmp_node = tmp_node->next;
+    }
+    return size;
+}
+
+void transfer_queue_arr(struct Queue *q, int *arr) {
+    int index = 0;
+    // Add all elements to an array (dumb I know)
+    while (!is_empty(q)) {
+        arr[index] = q->front->key;
+        index += 1;
+        dequeue(q);
+    }
+}
+
+void transfer_arr_queue(struct Queue *q, int *arr, int size) {
+    // Add items back to queue
+    for (int i = 0; i < size; i++) {
+        enqueue(q, arr[i]);
+    }
+}
+
 // Code has been modified from source: https://www.sanfoundry.com/c-program-sort-array-descending-order/
-void sort_queue(struct Queue *queue, char method) {
-    int tmp_arr[queue->size];
+void sort_queue(struct Queue *q, char method) {
     int tmp, swap;
 
-    int size = transfer_queue_arr(queue, tmp_arr);
+    int size = get_size(q);
+    int tmp_arr[size];
+
+    transfer_queue_arr(q, tmp_arr);
 
     for (int i = 0; i < size; i++) {
         for (int j = i + 1; j < size; j++) {
@@ -124,6 +137,6 @@ void sort_queue(struct Queue *queue, char method) {
         }
     }
 
-    transfer_arr_queue(queue, tmp_arr, size);
+    transfer_arr_queue(q, tmp_arr, size);
 
 }

@@ -1,5 +1,3 @@
-// TODO: Update doc strings
-// TODO: Append to an array and allocate at the end
 
 // Standard imports
 #include <stdio.h>
@@ -12,21 +10,29 @@
 // Global variables
 struct Queue *arrival_queue;
 struct Queue *ready_queue;
-struct Queue *finished_queue;
-// TODO: Find a better way to do this
-struct ProcessInfo process_info[100];
+struct Queue *sequence_queue;
+// TODO: Find a better way to do this (Will eventually do a linked list)
+struct ProcessInfo process_info[10000];
 
 int snapshot, arr_len;
 
-void init_queues(const char *file_name) {
+/***
+ * Reads a file and adds them to the arrival queue
+ * @param file_name The filename of the file to be read
+ */
+void init_arrival_queue(const char *file_name) {
 
     // Read file content and store into arrival queue
     FILE *fp;
-    arr_len = 0;
     int arr_index = 0;
     int pid = 0;
     int data_count = 1;
     int curr_num;
+
+    arr_len = 0;
+
+    arrival_queue = create_queue();
+    clean_queue(arrival_queue);
 
     fp = fopen(file_name, "r");
     while (!feof(fp)) {
@@ -34,6 +40,8 @@ void init_queues(const char *file_name) {
         // Initialize new process
         if (data_count == 1) {
             process_info[arr_index].pid = pid;
+            // Add to the arrival queue
+            enqueue(arrival_queue, pid);
             process_info[arr_index].burst = curr_num;
             process_info[arr_index].wait = 0;
             process_info[arr_index].turn_time = 0;
@@ -51,40 +59,33 @@ void init_queues(const char *file_name) {
     }
     fclose(fp);
 
-    // Add processes to arrival queue in order (file should be sorted)
-    arrival_queue = create_queue(arr_len);
-    for (int i = 0; i < arr_len; i++) {
-        enqueue(arrival_queue, process_info[i].pid);
-    }
 }
 
+// Controls the program
 int main(int argc, char *argv[]) {
 
     // Snapshot interval
     snapshot = atoi(argv[4]);
     const char *file_name = argv[2];
 
-    // Use to select each scheduling algorithm
-    int mode_select;
     // Main simulation loop
-    for (mode_select = 0; mode_select < 5; mode_select++) {
-        mode_select = 2;
+    for (int mode_select = 0; mode_select < 5; mode_select++) {
+        ready_queue = create_queue();
+        sequence_queue = create_queue();
         // Reset arrival queue
-        init_queues(file_name);
+        init_arrival_queue(file_name);
         init_sim(mode_select);
-        // First come, first served
         if (mode_select == 0) {
             fcfs();
-        }
-            // Shortest job first
-        else if (mode_select == 1) {
+        } else if (mode_select == 1) {
             sjf();
         } else if (mode_select == 2) {
             stcf();
         } else if (mode_select == 4) {
             priority();
         }
-        return 0;
+        clean_queue(ready_queue);
+        clean_queue(sequence_queue);
     }
 
     return 0;

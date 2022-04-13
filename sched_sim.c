@@ -13,21 +13,19 @@ struct MethodStats method_stats[4];
 
 extern struct Queue *arrival_queue;
 extern struct Queue *ready_queue;
-extern struct Queue *finished_queue;
-extern struct ProcessInfo process_info[100];
+extern struct Queue *sequence_queue;
+extern struct ProcessInfo process_info[10000];
 
 extern int snapshot;
 extern int arr_len;
 
 int run_pid, load_pid, finished, old_pid;
 
+/***
+ * Initializes a simulation, prepares for a new scheduling algorithm to run
+ * @param method_num An integer associated with each scheduling algorithm
+ */
 void init_sim(int method_num) {
-    // Flush all prior contents and free allocated memory
-    clean_queue(ready_queue);
-    clean_queue(finished_queue);
-
-    ready_queue = create_queue(arr_len);
-    finished_queue = create_queue(arr_len);
 
     for (int i = 0; i < arr_len; i++) {
         process_info[i].wait = 0;
@@ -53,7 +51,7 @@ void fcfs() {
     while (!finished) {
         handle_arrival_queue(0, 'n');
 
-        finished = handle_nonpre_cycle(0);
+        finished = handle_cycle(0);
 
         // Check if finished
         if (finished) {
@@ -70,7 +68,7 @@ void sjf() {
     while (!finished) {
         handle_arrival_queue(1, 'b');
 
-        finished = handle_nonpre_cycle(1);
+        finished = handle_cycle(1);
 
         // Check if finished
         if (finished) {
@@ -86,7 +84,7 @@ void priority() {
     while (!finished) {
         handle_arrival_queue(1, 'p');
 
-        finished = handle_nonpre_cycle(4);
+        finished = handle_cycle(4);
 
         // Check if finished
         if (finished) {
@@ -109,7 +107,7 @@ void stcf() {
         // TODO: Fix this
         if (run_pid != -1) {
             if (!is_empty(ready_queue) &&
-                process_info[run_pid].burst > process_info[front(ready_queue)].burst) {
+                process_info[run_pid].burst > process_info[ready_queue->front->key].burst) {
 
                 old_pid = run_pid;
                 run_pid = -1;
@@ -118,7 +116,7 @@ void stcf() {
         } else if (load_pid != -1) {
             // Preempt a loading process
             if (!is_empty(ready_queue) &&
-                process_info[load_pid].burst - 1 > process_info[front(ready_queue)].burst) {
+                process_info[load_pid].burst - 1 > process_info[ready_queue->front->key].burst) {
 
                 old_pid = load_pid;
                 cpu_info.state = 'P';
@@ -126,10 +124,11 @@ void stcf() {
             }
         }
 
-        finished = handle_nonpre_cycle(2);
+        finished = handle_cycle(2);
         if (cpu_info.state == 'P') {
             // TODO: Not a good idea to have a bounded queue now!
-            enqueue(finished_queue, old_pid);
+            enqueue(sequence_queue, old_pid);
+            process_info[old_pid].wait += 1;
             method_stats[2].context_switches += 1;
             process_info[old_pid].burst -= 1;
             enqueue(ready_queue, old_pid);

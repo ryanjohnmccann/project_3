@@ -12,7 +12,7 @@ void handle_finished_process();
 
 void calculate_wait();
 
-int handle_nonpre_cycle(int method_num);
+int handle_cycle(int method_num);
 
 void handle_arrival_queue(int will_sort, char sort_by);
 
