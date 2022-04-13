@@ -1,3 +1,4 @@
+// TODO: Handle various ties (SJF, STCF, Priority)
 
 // Standard imports
 #include <stdio.h>
@@ -30,7 +31,6 @@ void init_sim(int method_num) {
     for (int i = 0; i < arr_len; i++) {
         process_info[i].wait = 0;
         process_info[i].finished = 0;
-        process_info[i].turn_time = 0;
     }
 
     cpu_info.time = 0;
@@ -84,6 +84,9 @@ void priority() {
     while (!finished) {
         handle_arrival_queue(1, 'p');
 
+        if (cpu_info.time == 4) {
+            int lucky = 777;
+        }
         finished = handle_cycle(4);
 
         // Check if finished
@@ -103,8 +106,6 @@ void stcf() {
         handle_arrival_queue(1, 'b');
 
         // Add currently running process to queue and sort again, take the shortest burst time
-        // TODO: Possible that we're loading and running?
-        // TODO: Fix this
         if (run_pid != -1) {
             if (!is_empty(ready_queue) &&
                 process_info[run_pid].burst > process_info[ready_queue->front->key].burst) {
@@ -126,7 +127,6 @@ void stcf() {
 
         finished = handle_cycle(2);
         if (cpu_info.state == 'P') {
-            // TODO: Not a good idea to have a bounded queue now!
             enqueue(sequence_queue, old_pid);
             process_info[old_pid].wait += 1;
             method_stats[2].context_switches += 1;
@@ -144,6 +144,3 @@ void stcf() {
         }
     }
 }
-
-// TODO: Create non-pre sim function to neaten up this code
-

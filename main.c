@@ -44,7 +44,6 @@ void init_arrival_queue(const char *file_name) {
             enqueue(arrival_queue, pid);
             process_info[arr_index].burst = curr_num;
             process_info[arr_index].wait = 0;
-            process_info[arr_index].turn_time = 0;
         } else if (data_count == 2) {
             process_info[arr_index].priority = curr_num;
             // End of single process data

@@ -101,6 +101,7 @@ void transfer_queue_arr(struct Queue *q, int *arr) {
     // Add all elements to an array (dumb I know)
     while (!is_empty(q)) {
         arr[index] = q->front->key;
+        process_info[q->front->key].init_pos = index;
         index += 1;
         dequeue(q);
     }
@@ -125,10 +126,21 @@ void sort_queue(struct Queue *q, char method) {
     for (int i = 0; i < size; i++) {
         for (int j = i + 1; j < size; j++) {
             if (method == 'b') {
+                // TODO: Should this be the same as priority?
                 swap = process_info[tmp_arr[i]].burst > process_info[tmp_arr[j]].burst;
             } else if (method == 'p') {
-                swap = process_info[tmp_arr[i]].priority > process_info[tmp_arr[j]].priority;
+                // A process was moved behind another process with equal priority
+                if (process_info[tmp_arr[i]].priority == process_info[tmp_arr[j]].priority) {
+                    if (process_info[tmp_arr[i]].init_pos > process_info[tmp_arr[j]].init_pos) {
+                        swap = 1;
+                    } else {
+                        swap = 0;
+                    }
+                } else {
+                    swap = process_info[tmp_arr[i]].priority > process_info[tmp_arr[j]].priority;
+                }
             }
+
             if (swap) {
                 tmp = tmp_arr[i];
                 tmp_arr[i] = tmp_arr[j];
