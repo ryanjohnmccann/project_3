@@ -1,4 +1,8 @@
 // TODO: Context switch bug (STCF data file 2)
+// TODO: Write to output files
+// TODO: Print final final summary results
+// TODO: Neaten
+// TODO: Remove context switches from that struct
 
 // Standard imports
 #include <stdio.h>

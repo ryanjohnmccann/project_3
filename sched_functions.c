@@ -87,7 +87,7 @@ void print_summary(int method_num) {
     printf("Process sequence: ");
     print_queue(sequence_queue);
     printf("\n");
-    printf("Context switches: %i\n\n", method_stats[method_num].context_switches);
+    printf("Context switches: %i\n\n", get_size(sequence_queue));
 }
 
 void handle_finished_process() {

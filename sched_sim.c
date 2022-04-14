@@ -97,6 +97,7 @@ void priority() {
 }
 
 void stcf() {
+
     printf("***** STCF Scheduling *****\n");
     while (!finished) {
         handle_arrival_queue(1, 'b');
@@ -108,15 +109,20 @@ void stcf() {
                 process_info[run_pid].burst > process_info[ready_queue->front->key].burst) {
 
                 process_info[run_pid].burst -= 1;
-                old_pid = run_pid;
-                run_pid = -1;
-                cpu_info.state = 'P';
+                if (process_info[run_pid].burst == 0) {
+                    cpu_info.state = 'F';
+                } else {
+                    old_pid = run_pid;
+                    run_pid = -1;
+                    cpu_info.state = 'P';
+                }
             }
         } else if (load_pid != -1) {
             // Preempt a loading process
             if (!is_empty(ready_queue) &&
                 process_info[load_pid].burst - 1 > process_info[ready_queue->front->key].burst) {
 
+                process_info[load_pid].burst -= 1;
                 old_pid = load_pid;
                 cpu_info.state = 'P';
                 load_pid = -1;
@@ -128,10 +134,6 @@ void stcf() {
             enqueue(sequence_queue, old_pid);
             process_info[old_pid].wait += 1;
             method_stats[2].context_switches += 1;
-            // TODO: Fix
-            if (1) {
-                process_info[old_pid].burst -= 1;
-            }
             enqueue(ready_queue, old_pid);
             sort_queue(ready_queue, 'b');
             cpu_info.state = 'L';
@@ -153,10 +155,14 @@ void round_robin() {
 
         if (run_pid != -1) {
             if (!is_empty(ready_queue)) {
-                old_pid = run_pid;
-                run_pid = -1;
-                cpu_info.state = 'P';
                 process_info[run_pid].burst -= 1;
+                if (process_info[run_pid].burst == 0) {
+                    cpu_info.state = 'F';
+                } else {
+                    old_pid = run_pid;
+                    run_pid = -1;
+                    cpu_info.state = 'P';
+                }
             }
         }
 
