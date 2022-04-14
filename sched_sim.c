@@ -1,3 +1,5 @@
+// TODO: Handle various ties (SJF, STCF, Priority)
+// TODO: Remaining CPU burst when something is preempted is not correct
 
 // Standard imports
 #include <stdio.h>
@@ -13,26 +15,23 @@ struct MethodStats method_stats[4];
 
 extern struct Queue *arrival_queue;
 extern struct Queue *ready_queue;
-extern struct Queue *finished_queue;
-extern struct ProcessInfo process_info[100];
+extern struct Queue *sequence_queue;
+extern struct ProcessInfo process_info[10000];
 
 extern int snapshot;
 extern int arr_len;
 
-int run_pid, load_pid, finished;
+int run_pid, load_pid, finished, old_pid;
 
+/***
+ * Initializes a simulation, prepares for a new scheduling algorithm to run
+ * @param method_num An integer associated with each scheduling algorithm
+ */
 void init_sim(int method_num) {
-    // Flush all prior contents and free allocated memory
-    clean_queue(ready_queue);
-    clean_queue(finished_queue);
-
-    ready_queue = create_queue(arr_len);
-    finished_queue = create_queue(arr_len);
 
     for (int i = 0; i < arr_len; i++) {
         process_info[i].wait = 0;
         process_info[i].finished = 0;
-        process_info[i].turn_time = 0;
     }
 
     cpu_info.time = 0;
@@ -53,7 +52,7 @@ void fcfs() {
     while (!finished) {
         handle_arrival_queue(0, 'n');
 
-        finished = handle_nonpre_cycle(0);
+        finished = handle_cycle(0);
 
         // Check if finished
         if (finished) {
@@ -70,7 +69,7 @@ void sjf() {
     while (!finished) {
         handle_arrival_queue(1, 'b');
 
-        finished = handle_nonpre_cycle(1);
+        finished = handle_cycle(1);
 
         // Check if finished
         if (finished) {
@@ -86,7 +85,7 @@ void priority() {
     while (!finished) {
         handle_arrival_queue(1, 'p');
 
-        finished = handle_nonpre_cycle(4);
+        finished = handle_cycle(4);
 
         // Check if finished
         if (finished) {
@@ -98,43 +97,90 @@ void priority() {
 }
 
 void stcf() {
+
     printf("***** STCF Scheduling *****\n");
-     while (!finished) {
-         handle_arrival_queue(1, 'b');
+    while (!finished) {
+        handle_arrival_queue(1, 'b');
 
-         // Add currently running process to queue and sort again, take the shortest burst time
-         // TODO: Possible that we're loading and running?
-         if (run_pid != -1) {
-             int old_run = run_pid;
-             enqueue(ready_queue, run_pid);
-             sort_queue(ready_queue, 'b');
-             run_pid = dequeue(ready_queue);
-             // Preempted, load another process
-             if (old_run != run_pid) {
+        // Add currently running process to queue and sort again, take the shortest burst time
+        if (run_pid != -1) {
+            // TODO: Neaten
+            if (!is_empty(ready_queue) &&
+                process_info[run_pid].burst > process_info[ready_queue->front->key].burst) {
 
-             }
-         }
-         else if (load_pid != -1) {
-             int old_load = load_pid;
-             enqueue(ready_queue, run_pid);
-             sort_queue(ready_queue, 'b');
-             load_pid = dequeue(ready_queue);
-             // Preempt a process after just one cycle
-             if (old_load != load_pid) {
+                process_info[run_pid].burst -= 1;
+                if (process_info[run_pid].burst == 0) {
+                    cpu_info.state = 'F';
+                } else {
+                    old_pid = run_pid;
+                    run_pid = -1;
+                    cpu_info.state = 'P';
+                }
+            }
+        } else if (load_pid != -1) {
+            // Preempt a loading process
+            if (!is_empty(ready_queue) &&
+                process_info[load_pid].burst - 1 > process_info[ready_queue->front->key].burst) {
 
-             }
-         }
+                process_info[load_pid].burst -= 1;
+                old_pid = load_pid;
+                cpu_info.state = 'P';
+                load_pid = -1;
+            }
+        }
 
-         finished = handle_nonpre_cycle(2);
+        finished = handle_cycle(2);
+        if (cpu_info.state == 'P') {
+            enqueue(sequence_queue, old_pid);
+            process_info[old_pid].wait += 1;
+            method_stats[2].context_switches += 1;
+            enqueue(ready_queue, old_pid);
+            sort_queue(ready_queue, 'b');
+            cpu_info.state = 'L';
+        }
 
-         // Check if finished
-         if (finished) {
-             printf("*********************************************************\n");
-             printf("STCF Summary (WT = wait time, TT = turnaround time):\n\n");
-             print_summary(2);
-         }
-     }
+        // Check if finished
+        if (finished) {
+            printf("*********************************************************\n");
+            printf("STCF Summary (WT = wait time, TT = turnaround time):\n\n");
+            print_summary(2);
+        }
+    }
 }
 
-// TODO: Create non-pre sim function to neaten up this code
+void round_robin() {
+    printf("***** Round robin Scheduling *****\n");
+    while (!finished) {
+        handle_arrival_queue(0, 'n');
 
+        if (run_pid != -1) {
+            if (!is_empty(ready_queue)) {
+                process_info[run_pid].burst -= 1;
+                if (process_info[run_pid].burst == 0) {
+                    cpu_info.state = 'F';
+                } else {
+                    old_pid = run_pid;
+                    run_pid = -1;
+                    cpu_info.state = 'P';
+                }
+            }
+        }
+
+        finished = handle_cycle(2);
+        if (cpu_info.state == 'P') {
+            enqueue(sequence_queue, old_pid);
+            process_info[old_pid].wait += 1;
+            method_stats[3].context_switches += 1;
+//            process_info[old_pid].burst -= 1;
+            enqueue(ready_queue, old_pid);
+            cpu_info.state = 'L';
+        }
+
+        // Check if finished
+        if (finished) {
+            printf("*********************************************************\n");
+            printf("Round robin Summary (WT = wait time, TT = turnaround time):\n\n");
+            print_summary(3);
+        }
+    }
+}

@@ -7,7 +7,8 @@ struct CPUInfo {
 };
 
 struct ProcessInfo {
-    float pid, burst, priority, arrival, wait, turn_time, finished;
+    int init_pos;
+    float pid, burst, priority, arrival, wait, finished;
 };
 
 struct MethodStats {
@@ -24,5 +25,7 @@ void sjf();
 void priority();
 
 void stcf();
+
+void round_robin();
 
 #endif

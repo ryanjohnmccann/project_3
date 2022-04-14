@@ -15,13 +15,13 @@ extern struct MethodStats method_stats[4];
 
 extern struct Queue *arrival_queue;
 extern struct Queue *ready_queue;
-extern struct Queue *finished_queue;
+extern struct Queue *sequence_queue;
 extern struct ProcessInfo process_info[100];
 
-extern int run_pid, load_pid;
+extern int run_pid, load_pid, old_pid;
 extern int arr_len;
 
-void print_cpu(float pid, float second_pid, float burst) {
+void print_cpu(float pid, float second_pid, float burst, float second_burst) {
     printf("t = %i\n", cpu_info.time);
     // Loading
     if (cpu_info.state == 'L') {
@@ -39,9 +39,10 @@ void print_cpu(float pid, float second_pid, float burst) {
     else if (cpu_info.state == 'F') {
         printf("CPU: Finishing process %.0f\n", pid);
     }
-        // TODO: Implement (preemptive)
-    else {
-        printf("=== IMPLEMENT ===\n");
+        // Preempting a process
+    else if (cpu_info.state == 'P') {
+        printf("CPU: Preempting process %.0f (remaining CPU burst = %.0f); loading process %.0f"
+               " (CPU burst = %.0f)\n", pid, burst, second_pid, second_burst);
     }
     printf("Ready queue: ");
     print_queue(ready_queue);
@@ -52,15 +53,18 @@ void handle_cpu_print() {
     if ((cpu_info.time % cpu_info.snapshot) == 0 || (cpu_info.snapshot == 1 && cpu_info.time == 0)) {
         // Loading
         if (cpu_info.state == 'L') {
-            print_cpu(load_pid, -1, process_info[load_pid].burst);
+            print_cpu(load_pid, -1, process_info[load_pid].burst, 0);
         }
             // Running or just finishing (with no load)
         else if (cpu_info.state == 'R' || cpu_info.state == 'F') {
-            print_cpu(run_pid, -1, process_info[run_pid].burst);
+            print_cpu(run_pid, -1, process_info[run_pid].burst, 0);
         }
             // Finishing and loading
         else if (cpu_info.state == 'B') {
-            print_cpu(run_pid, load_pid, process_info[load_pid].burst);
+            print_cpu(run_pid, load_pid, process_info[load_pid].burst, 0);
+        } else if (cpu_info.state == 'P') {
+            print_cpu(old_pid, load_pid, process_info[old_pid].burst,
+                      process_info[load_pid].burst);
         }
     }
 }
@@ -81,9 +85,9 @@ void print_summary(int method_num) {
 
     printf("AVG\t\t%.2f\t%.2f\n\n", method_stats[method_num].avg_wt, method_stats[method_num].avg_tt);
     printf("Process sequence: ");
-    print_queue(finished_queue);
+    print_queue(sequence_queue);
     printf("\n");
-    printf("Context switches: %i\n\n", method_stats[method_num].context_switches);
+    printf("Context switches: %i\n\n", get_size(sequence_queue));
 }
 
 void handle_finished_process() {
@@ -92,20 +96,21 @@ void handle_finished_process() {
         // Load the next process while finishing
         if (!is_empty(ready_queue)) {
             cpu_info.state = 'B';
-            load_pid = front(ready_queue);
+            load_pid = ready_queue->front->key;
         } else {
             cpu_info.state = 'F';
         }
-        enqueue(finished_queue, run_pid);
+        enqueue(sequence_queue, run_pid);
     }
 }
 
 void calculate_wait() {
     int size = 0;
-    int tmp_arr[ready_queue->size];
+    int tmp_arr[get_size(ready_queue)];
 
     while (!is_empty(ready_queue)) {
-        tmp_arr[size] = dequeue(ready_queue);
+        tmp_arr[size] = ready_queue->front->key;
+        dequeue(ready_queue);
         size += 1;
     }
 
@@ -117,7 +122,7 @@ void calculate_wait() {
     }
 }
 
-int handle_nonpre_cycle(int method_num) {
+int handle_cycle(int method_num) {
     // Last cycle was a loading state, process is ready to be removed from the ready queue
     if (cpu_info.state == 'L') {
         dequeue(ready_queue);
@@ -132,8 +137,10 @@ int handle_nonpre_cycle(int method_num) {
     }
         // Not running and something in the ready queue, load a new process
     else if (!is_empty(ready_queue) && load_pid == -1) {
-        load_pid = front(ready_queue);
-        cpu_info.state = 'L';
+        load_pid = ready_queue->front->key;
+        if (cpu_info.state != 'P') {
+            cpu_info.state = 'L';
+        }
     }
         // Loaded a new process in the prior cycle and nothing running now, start running
     else if (load_pid != -1) {
@@ -170,12 +177,12 @@ int handle_nonpre_cycle(int method_num) {
 }
 
 void handle_arrival_queue(int will_sort, char sort_by) {
-    while (!is_empty(arrival_queue) && process_info[front(arrival_queue)].arrival <= cpu_info.time) {
+    while (!is_empty(arrival_queue) && process_info[arrival_queue->front->key].arrival <= cpu_info.time) {
 
-        enqueue(ready_queue, process_info[front(arrival_queue)].pid);
+        enqueue(ready_queue, process_info[arrival_queue->front->key].pid);
         dequeue(arrival_queue);
         // Rearrange ready queue by burst time
-        if (ready_queue->size > 1 && will_sort) {
+        if (get_size(ready_queue) > 1 && will_sort) {
             sort_queue(ready_queue, sort_by);
         }
     }
