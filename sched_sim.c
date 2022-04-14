@@ -1,5 +1,3 @@
-// TODO: Handle various ties (SJF, STCF, Priority)
-// TODO: Remaining CPU burst when something is preempted is not correct
 
 // Standard imports
 #include <stdio.h>
@@ -36,7 +34,7 @@ void init_sim(int method_num) {
 
     cpu_info.time = 0;
     method_stats[method_num].context_switches = 0;
-    // Invalid state
+    // Invalid state temporarily
     cpu_info.state = 'N';
     cpu_info.snapshot = snapshot;
     load_pid = run_pid = -1;
@@ -63,7 +61,6 @@ void fcfs() {
     }
 }
 
-// TODO: How to break a tie between same arrival and same burst time?
 void sjf() {
     printf("***** SJF Scheduling *****\n");
     while (!finished) {
@@ -103,33 +100,31 @@ void stcf() {
         handle_arrival_queue(1, 'b');
 
         // Add currently running process to queue and sort again, take the shortest burst time
-        if (run_pid != -1) {
-            // TODO: Neaten
-            if (!is_empty(ready_queue) &&
-                process_info[run_pid].burst > process_info[ready_queue->front->key].burst) {
+        if (run_pid != -1 && !is_empty(ready_queue) &&
+            process_info[run_pid].burst > process_info[ready_queue->front->key].burst) {
 
-                process_info[run_pid].burst -= 1;
-                if (process_info[run_pid].burst == 0) {
-                    cpu_info.state = 'F';
-                } else {
-                    old_pid = run_pid;
-                    run_pid = -1;
-                    cpu_info.state = 'P';
-                }
-            }
-        } else if (load_pid != -1) {
-            // Preempt a loading process
-            if (!is_empty(ready_queue) &&
-                process_info[load_pid].burst - 1 > process_info[ready_queue->front->key].burst) {
-
-                process_info[load_pid].burst -= 1;
-                old_pid = load_pid;
+            process_info[run_pid].burst -= 1;
+            if (process_info[run_pid].burst == 0) {
+                cpu_info.state = 'F';
+            } else {
+                old_pid = run_pid;
+                run_pid = -1;
                 cpu_info.state = 'P';
-                load_pid = -1;
             }
+
+        }
+            // Preempt a loading process
+        else if (load_pid != -1 && !is_empty(ready_queue) &&
+                 (process_info[load_pid].burst - 1) > process_info[ready_queue->front->key].burst) {
+
+            process_info[load_pid].burst -= 1;
+            old_pid = load_pid;
+            cpu_info.state = 'P';
+            load_pid = -1;
         }
 
         finished = handle_cycle(2);
+        // Handles the aftermath of a preemptive cycle, handle_cycle does not have functionality for that (yet)
         if (cpu_info.state == 'P') {
             enqueue(sequence_queue, old_pid);
             process_info[old_pid].wait += 1;
@@ -153,16 +148,14 @@ void round_robin() {
     while (!finished) {
         handle_arrival_queue(0, 'n');
 
-        if (run_pid != -1) {
-            if (!is_empty(ready_queue)) {
-                process_info[run_pid].burst -= 1;
-                if (process_info[run_pid].burst == 0) {
-                    cpu_info.state = 'F';
-                } else {
-                    old_pid = run_pid;
-                    run_pid = -1;
-                    cpu_info.state = 'P';
-                }
+        if (run_pid != -1 && !is_empty(ready_queue)) {
+            process_info[run_pid].burst -= 1;
+            if (process_info[run_pid].burst == 0) {
+                cpu_info.state = 'F';
+            } else {
+                old_pid = run_pid;
+                run_pid = -1;
+                cpu_info.state = 'P';
             }
         }
 
@@ -171,7 +164,6 @@ void round_robin() {
             enqueue(sequence_queue, old_pid);
             process_info[old_pid].wait += 1;
             method_stats[3].context_switches += 1;
-//            process_info[old_pid].burst -= 1;
             enqueue(ready_queue, old_pid);
             cpu_info.state = 'L';
         }

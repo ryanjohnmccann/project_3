@@ -1,5 +1,3 @@
-// TODO: There is a context switch bug\
-// TODO: Transfer prints to write to file
 
 // Standard imports
 #include <stdio.h>
@@ -21,6 +19,7 @@ extern struct ProcessInfo process_info[100];
 extern int run_pid, load_pid, old_pid;
 extern int arr_len;
 
+// TODO: Change to write to file
 void print_cpu(float pid, float second_pid, float burst, float second_burst) {
     printf("t = %i\n", cpu_info.time);
     // Loading
@@ -49,6 +48,7 @@ void print_cpu(float pid, float second_pid, float burst, float second_burst) {
     printf("\n\n");
 }
 
+// TODO: Change to write to file
 void handle_cpu_print() {
     if ((cpu_info.time % cpu_info.snapshot) == 0 || (cpu_info.snapshot == 1 && cpu_info.time == 0)) {
         // Loading
@@ -69,6 +69,7 @@ void handle_cpu_print() {
     }
 }
 
+// TODO: Change to write to file
 void print_summary(int method_num) {
     printf("PID\t\tWT\t\tTT\n");
 
@@ -90,7 +91,12 @@ void print_summary(int method_num) {
     printf("Context switches: %i\n\n", get_size(sequence_queue));
 }
 
+/***
+ * Determines if the currently running process is about to finish or not. If true, function handles the next cpu state
+ * and potentially a new loading process
+ */
 void handle_finished_process() {
+    // Technically this number should never be less than zero
     if (process_info[run_pid].burst <= 0) {
         process_info[run_pid].finished = cpu_info.time;
         // Load the next process while finishing
@@ -104,6 +110,9 @@ void handle_finished_process() {
     }
 }
 
+/***
+ * Traverses through the ready queue and updates wait times for all processes in it
+ */
 void calculate_wait() {
     int size = 0;
     int tmp_arr[get_size(ready_queue)];
@@ -115,6 +124,7 @@ void calculate_wait() {
     }
 
     for (int i = 0; i < size; i++) {
+        // Do not add to wait time for a loading process
         if (process_info[tmp_arr[i]].pid != load_pid) {
             process_info[tmp_arr[i]].wait += 1;
         }
@@ -122,6 +132,11 @@ void calculate_wait() {
     }
 }
 
+/***
+ * Runs a cycle of the CPU
+ * @param method_num A number to determine which scheduling algorithm is currently running
+ * @return 1 if last cycle, 0 otherwise
+ */
 int handle_cycle(int method_num) {
     // Last cycle was a loading state, process is ready to be removed from the ready queue
     if (cpu_info.state == 'L') {
@@ -176,12 +191,18 @@ int handle_cycle(int method_num) {
     return 0;
 }
 
+/***
+ * Determines if something from the arrival queue should be added to the ready queue, sorts the ready queue afterwards
+ * if necessary
+ * @param will_sort To determine if we need to sort e.g. FCFS does not
+ * @param sort_by Determines what we sort by e.g. burst or priority
+ */
 void handle_arrival_queue(int will_sort, char sort_by) {
     while (!is_empty(arrival_queue) && process_info[arrival_queue->front->key].arrival <= cpu_info.time) {
 
         enqueue(ready_queue, process_info[arrival_queue->front->key].pid);
         dequeue(arrival_queue);
-        // Rearrange ready queue by burst time
+
         if (get_size(ready_queue) > 1 && will_sort) {
             sort_queue(ready_queue, sort_by);
         }

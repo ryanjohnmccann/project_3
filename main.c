@@ -1,8 +1,7 @@
-// TODO: Context switch bug (STCF data file 2)
 // TODO: Write to output files
 // TODO: Print final final summary results
-// TODO: Neaten
 // TODO: Remove context switches from that struct
+// TODO: Handle various ties (SJF, STCF, Priority)
 
 // Standard imports
 #include <stdio.h>
@@ -16,7 +15,6 @@
 struct Queue *arrival_queue;
 struct Queue *ready_queue;
 struct Queue *sequence_queue;
-// TODO: Find a better way to do this (Will eventually do a linked list)
 struct ProcessInfo process_info[10000];
 
 int snapshot, arr_len;
@@ -36,6 +34,7 @@ void init_arrival_queue(const char *file_name) {
 
     arr_len = 0;
 
+    // Initialize and clean arrival queue
     arrival_queue = create_queue();
     clean_queue(arrival_queue);
 
@@ -76,7 +75,7 @@ int main(int argc, char *argv[]) {
     for (int mode_select = 0; mode_select < 5; mode_select++) {
         ready_queue = create_queue();
         sequence_queue = create_queue();
-        // Reset arrival queue
+        // Reset arrival queue and get ready for another scheduling simulation
         init_arrival_queue(file_name);
         init_sim(mode_select);
         if (mode_select == 0) {

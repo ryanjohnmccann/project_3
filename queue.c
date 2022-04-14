@@ -114,7 +114,6 @@ void transfer_arr_queue(struct Queue *q, int *arr, int size) {
     }
 }
 
-// Code has been modified from source: https://www.sanfoundry.com/c-program-sort-array-descending-order/
 void sort_queue(struct Queue *q, char method) {
     int tmp, swap;
 
