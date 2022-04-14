@@ -126,8 +126,16 @@ void sort_queue(struct Queue *q, char method) {
     for (int i = 0; i < size; i++) {
         for (int j = i + 1; j < size; j++) {
             if (method == 'b') {
-                // TODO: Should this be the same as priority?
-                swap = process_info[tmp_arr[i]].burst > process_info[tmp_arr[j]].burst;
+                // A process was moved behind another process with equal burst
+                if (process_info[tmp_arr[i]].burst == process_info[tmp_arr[j]].burst) {
+                    if (process_info[tmp_arr[i]].init_pos > process_info[tmp_arr[j]].init_pos) {
+                        swap = 1;
+                    } else {
+                        swap = 0;
+                    }
+                } else {
+                    swap = process_info[tmp_arr[i]].burst > process_info[tmp_arr[j]].burst;
+                }
             } else if (method == 'p') {
                 // A process was moved behind another process with equal priority
                 if (process_info[tmp_arr[i]].priority == process_info[tmp_arr[j]].priority) {
