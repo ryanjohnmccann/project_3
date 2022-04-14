@@ -71,16 +71,16 @@ int is_empty(struct Queue *q) {
     return 0;
 }
 
-void print_queue(struct Queue *q) {
+void print_queue(struct Queue *q, FILE *fp) {
     struct QNode *tmp_node = q->front;
     if (tmp_node == NULL) {
-        printf("empty");
+        fprintf(fp, "empty");
     } else {
         while (tmp_node != NULL) {
-            printf("%i", tmp_node->key);
+            fprintf(fp, "%i", tmp_node->key);
             tmp_node = tmp_node->next;
             if (tmp_node != NULL) {
-                printf("-");
+                fprintf(fp, "-");
             }
         }
     }

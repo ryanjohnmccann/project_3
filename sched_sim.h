@@ -18,14 +18,14 @@ struct MethodStats {
 
 void init_sim(int method_num);
 
-void fcfs();
+void fcfs(const char *output_file);
 
-void sjf();
+void sjf(const char *output_file);
 
-void priority();
+void priority(const char *output_file);
 
-void stcf();
+void stcf(const char *output_file);
 
-void round_robin();
+void round_robin(const char *output_file);
 
 #endif

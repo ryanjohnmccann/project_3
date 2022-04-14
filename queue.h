@@ -26,7 +26,7 @@ void clean_queue(struct Queue *q);
 
 int is_empty(struct Queue *q);
 
-void print_queue(struct Queue *q);
+void print_queue(struct Queue *q, FILE *fp);
 
 int get_size(struct Queue *q);
 

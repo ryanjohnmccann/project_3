@@ -45,57 +45,78 @@ void init_sim(int method_num) {
     method_stats[method_num].context_switches = 0;
 }
 
-void fcfs() {
-    printf("***** FCFS Scheduling *****\n");
+void fcfs(const char *output_file) {
+    FILE *fp;
+
+    fp = fopen(output_file, "a");
+    fprintf(fp, "***** FCFS Scheduling *****\n");
+    fclose(fp);
     while (!finished) {
         handle_arrival_queue(0, 'n');
 
-        finished = handle_cycle(0);
+        finished = handle_cycle(0, output_file);
 
         // Check if finished
         if (finished) {
-            printf("*********************************************************\n");
-            printf("FCFS Summary (WT = wait time, TT = turnaround time):\n\n");
-            print_summary(0);
+            fp = fopen(output_file, "a");
+            fprintf(fp, "*********************************************************\n");
+            fprintf(fp, "FCFS Summary (WT = wait time, TT = turnaround time):\n\n");
+            fclose(fp);
+            write_summary(0, output_file);
         }
     }
 }
 
-void sjf() {
-    printf("***** SJF Scheduling *****\n");
+void sjf(const char *output_file) {
+    FILE *fp;
+
+    fp = fopen(output_file, "a");
+    fprintf(fp, "***** SJF Scheduling *****\n");
+    fclose(fp);
     while (!finished) {
         handle_arrival_queue(1, 'b');
 
-        finished = handle_cycle(1);
+        finished = handle_cycle(1, output_file);
 
         // Check if finished
         if (finished) {
-            printf("*********************************************************\n");
-            printf("SJF Summary (WT = wait time, TT = turnaround time):\n\n");
-            print_summary(1);
+            fp = fopen(output_file, "a");
+            fprintf(fp,"*********************************************************\n");
+            fprintf(fp, "SJF Summary (WT = wait time, TT = turnaround time):\n\n");
+            fclose(fp);
+            write_summary(1, output_file);
         }
     }
 }
 
-void priority() {
-    printf("***** Priority Scheduling *****\n");
+void priority(const char *output_file) {
+    FILE *fp;
+
+    fp = fopen(output_file, "a");
+    fprintf(fp, "***** Priority Scheduling *****\n");
+    fclose(fp);
     while (!finished) {
         handle_arrival_queue(1, 'p');
 
-        finished = handle_cycle(4);
+        finished = handle_cycle(4, output_file);
 
         // Check if finished
         if (finished) {
-            printf("*********************************************************\n");
-            printf("Priority Summary (WT = wait time, TT = turnaround time):\n\n");
-            print_summary(4);
+            fp = fopen(output_file, "a");
+            fprintf(fp, "*********************************************************\n");
+            fprintf(fp, "Priority Summary (WT = wait time, TT = turnaround time):\n\n");
+            fclose(fp);
+            write_summary(4, output_file);
         }
     }
 }
 
-void stcf() {
+void stcf(const char *output_file) {
+    FILE *fp;
 
-    printf("***** STCF Scheduling *****\n");
+    fp = fopen(output_file, "a");
+    fprintf(fp, "***** STCF Scheduling *****\n");
+    fclose(fp);
     while (!finished) {
         handle_arrival_queue(1, 'b');
 
@@ -123,7 +144,7 @@ void stcf() {
             load_pid = -1;
         }
 
-        finished = handle_cycle(2);
+        finished = handle_cycle(2, output_file);
         // Handles the aftermath of a preemptive cycle, handle_cycle does not have functionality for that (yet)
         if (cpu_info.state == 'P') {
             enqueue(sequence_queue, old_pid);
@@ -136,15 +157,21 @@ void stcf() {
 
         // Check if finished
         if (finished) {
-            printf("*********************************************************\n");
-            printf("STCF Summary (WT = wait time, TT = turnaround time):\n\n");
-            print_summary(2);
+            fp = fopen(output_file, "a");
+            fprintf(fp, "*********************************************************\n");
+            fprintf(fp, "STCF Summary (WT = wait time, TT = turnaround time):\n\n");
+            fclose(fp);
+            write_summary(2, output_file);
         }
     }
 }
 
-void round_robin() {
-    printf("***** Round robin Scheduling *****\n");
+void round_robin(const char *output_file) {
+    FILE *fp;
+
+    fp = fopen(output_file, "a");
+    fprintf(fp, "***** Round robin Scheduling *****\n");
+    fclose(fp);
     while (!finished) {
         handle_arrival_queue(0, 'n');
 
@@ -159,7 +186,7 @@ void round_robin() {
             }
         }
 
-        finished = handle_cycle(2);
+        finished = handle_cycle(2, output_file);
         if (cpu_info.state == 'P') {
             enqueue(sequence_queue, old_pid);
             process_info[old_pid].wait += 1;
@@ -170,9 +197,11 @@ void round_robin() {
 
         // Check if finished
         if (finished) {
-            printf("*********************************************************\n");
-            printf("Round robin Summary (WT = wait time, TT = turnaround time):\n\n");
-            print_summary(3);
+            fp = fopen(output_file, "a");
+            fprintf(fp, "*********************************************************\n");
+            fprintf(fp, "Round robin Summary (WT = wait time, TT = turnaround time):\n\n");
+            fclose(fp);
+            write_summary(3, output_file);
         }
     }
 }
