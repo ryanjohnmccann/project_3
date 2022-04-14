@@ -1,3 +1,4 @@
+// TODO: Context switch bug (STCF data file 2)
 
 // Standard imports
 #include <stdio.h>
@@ -80,6 +81,8 @@ int main(int argc, char *argv[]) {
             sjf();
         } else if (mode_select == 2) {
             stcf();
+        } else if (mode_select == 3) {
+            round_robin();
         } else if (mode_select == 4) {
             priority();
         }

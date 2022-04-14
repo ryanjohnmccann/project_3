@@ -1,4 +1,5 @@
 // TODO: Handle various ties (SJF, STCF, Priority)
+// TODO: Remaining CPU burst when something is preempted is not correct
 
 // Standard imports
 #include <stdio.h>
@@ -84,9 +85,6 @@ void priority() {
     while (!finished) {
         handle_arrival_queue(1, 'p');
 
-        if (cpu_info.time == 4) {
-            int lucky = 777;
-        }
         finished = handle_cycle(4);
 
         // Check if finished
@@ -99,17 +97,17 @@ void priority() {
 }
 
 void stcf() {
-    // TODO: Fix "finished" queue
-    // TODO:
     printf("***** STCF Scheduling *****\n");
     while (!finished) {
         handle_arrival_queue(1, 'b');
 
         // Add currently running process to queue and sort again, take the shortest burst time
         if (run_pid != -1) {
+            // TODO: Neaten
             if (!is_empty(ready_queue) &&
                 process_info[run_pid].burst > process_info[ready_queue->front->key].burst) {
 
+                process_info[run_pid].burst -= 1;
                 old_pid = run_pid;
                 run_pid = -1;
                 cpu_info.state = 'P';
@@ -130,7 +128,10 @@ void stcf() {
             enqueue(sequence_queue, old_pid);
             process_info[old_pid].wait += 1;
             method_stats[2].context_switches += 1;
-            process_info[old_pid].burst -= 1;
+            // TODO: Fix
+            if (1) {
+                process_info[old_pid].burst -= 1;
+            }
             enqueue(ready_queue, old_pid);
             sort_queue(ready_queue, 'b');
             cpu_info.state = 'L';
@@ -141,6 +142,39 @@ void stcf() {
             printf("*********************************************************\n");
             printf("STCF Summary (WT = wait time, TT = turnaround time):\n\n");
             print_summary(2);
+        }
+    }
+}
+
+void round_robin() {
+    printf("***** Round robin Scheduling *****\n");
+    while (!finished) {
+        handle_arrival_queue(0, 'n');
+
+        if (run_pid != -1) {
+            if (!is_empty(ready_queue)) {
+                old_pid = run_pid;
+                run_pid = -1;
+                cpu_info.state = 'P';
+                process_info[run_pid].burst -= 1;
+            }
+        }
+
+        finished = handle_cycle(2);
+        if (cpu_info.state == 'P') {
+            enqueue(sequence_queue, old_pid);
+            process_info[old_pid].wait += 1;
+            method_stats[3].context_switches += 1;
+//            process_info[old_pid].burst -= 1;
+            enqueue(ready_queue, old_pid);
+            cpu_info.state = 'L';
+        }
+
+        // Check if finished
+        if (finished) {
+            printf("*********************************************************\n");
+            printf("Round robin Summary (WT = wait time, TT = turnaround time):\n\n");
+            print_summary(3);
         }
     }
 }

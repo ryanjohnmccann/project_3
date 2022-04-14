@@ -26,4 +26,6 @@ void priority();
 
 void stcf();
 
+void round_robin();
+
 #endif
