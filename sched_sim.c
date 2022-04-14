@@ -45,6 +45,68 @@ void init_sim(int method_num) {
     method_stats[method_num].context_switches = 0;
 }
 
+void _write_final_summary(struct Queue *q, char sort_method, FILE *fp) {
+    for (int i = 0; i < 5; i++) {
+        enqueue(q, i);
+    }
+
+    sort_queue(q, sort_method);
+    int count = 1;
+    float curr_value;
+    while (!is_empty(q)) {
+        int curr_method = q->front->key;
+        if (sort_method == 'w') {
+            curr_value = method_stats[curr_method].avg_wt;
+        } else if (sort_method == 't') {
+            curr_value = method_stats[curr_method].avg_tt;
+        } else if (sort_method == 'c') {
+            curr_value = method_stats[curr_method].context_switches;
+        }
+
+        fprintf(fp, "%i ", count);
+        if (curr_method == 0) {
+            fprintf(fp, "FCFS\t\t%.2f", curr_value);
+        } else if (curr_method == 1) {
+            fprintf(fp, "SJF\t\t%.2f", curr_value);
+        } else if (curr_method == 2) {
+            fprintf(fp, "STCF\t\t%.2f", curr_value);
+        } else if (curr_method == 3) {
+            fprintf(fp, "Round robin\t\t%.2f", curr_value);
+        } else if (curr_method == 4) {
+            fprintf(fp, "Priority\t\t%.2f", curr_value);
+        }
+        count += 1;
+        dequeue(q);
+        fprintf(fp, "\n");
+    }
+    fprintf(fp, "\n\n");
+}
+
+void write_final_summary(const char *output_file) {
+    FILE *fp;
+
+    fp = fopen(output_file, "a");
+    fprintf(fp, "***** OVERALL SUMMARY *****\n\n");
+
+    struct Queue *wait_queue, *turn_queue, *context_queue;
+    wait_queue = create_queue();
+    turn_queue = create_queue();
+    context_queue = create_queue();
+
+    fprintf(fp, "Wait Time Comparison\n");
+    _write_final_summary(wait_queue, 'w', fp);
+    fprintf(fp, "Turnaround Time Comparison\n");
+    _write_final_summary(turn_queue, 't', fp);
+    fprintf(fp, "Context Switch Comparison\n");
+    _write_final_summary(context_queue, 'c', fp);
+
+    clean_queue(wait_queue);
+    clean_queue(turn_queue);
+    clean_queue(context_queue);
+
+    fclose(fp);
+}
+
 void fcfs(const char *output_file) {
     FILE *fp;
 
@@ -81,7 +143,7 @@ void sjf(const char *output_file) {
         // Check if finished
         if (finished) {
             fp = fopen(output_file, "a");
-            fprintf(fp,"*********************************************************\n");
+            fprintf(fp, "*********************************************************\n");
             fprintf(fp, "SJF Summary (WT = wait time, TT = turnaround time):\n\n");
             fclose(fp);
             write_summary(1, output_file);

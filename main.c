@@ -103,5 +103,7 @@ int main(int argc, char *argv[]) {
         clean_queue(sequence_queue);
     }
 
+    write_final_summary(output_file_name);
+
     return 0;
 }

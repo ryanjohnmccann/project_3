@@ -6,6 +6,7 @@
 #include "sched_sim.h"
 
 extern struct ProcessInfo process_info[100];
+extern struct MethodStats method_stats[4];
 
 // Source for queue code: https://www.geeksforgeeks.org/queue-linked-list-implementation/
 
@@ -146,6 +147,12 @@ void sort_queue(struct Queue *q, char method) {
                 } else {
                     swap = process_info[tmp_arr[i]].priority > process_info[tmp_arr[j]].priority;
                 }
+            } else if (method == 'w') {
+                swap = method_stats[tmp_arr[i]].avg_wt > method_stats[tmp_arr[j]].avg_wt;
+            } else if (method == 't') {
+                swap = method_stats[tmp_arr[i]].avg_tt > method_stats[tmp_arr[j]].avg_tt;
+            } else if (method == 'c') {
+                swap = method_stats[tmp_arr[i]].context_switches > method_stats[tmp_arr[j]].context_switches;
             }
 
             if (swap) {

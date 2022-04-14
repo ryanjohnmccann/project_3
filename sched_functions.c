@@ -46,7 +46,7 @@ void write_cpu_cycle(float pid, float second_pid, float burst, float second_burs
         // Preempting a process
     else if (cpu_info.state == 'P') {
         fprintf(fp, "CPU: Preempting process %.0f (remaining CPU burst = %.0f); loading process %.0f"
-               " (CPU burst = %.0f)\n", pid, burst, second_pid, second_burst);
+                    " (CPU burst = %.0f)\n", pid, burst, second_pid, second_burst);
     }
     fprintf(fp, "Ready queue: ");
     print_queue(ready_queue, fp);
@@ -69,7 +69,7 @@ void handle_write_cpu_cycle(const char *file_name) {
             write_cpu_cycle(run_pid, load_pid, process_info[load_pid].burst, 0, file_name);
         } else if (cpu_info.state == 'P') {
             write_cpu_cycle(old_pid, load_pid, process_info[old_pid].burst,
-                      process_info[load_pid].burst, file_name);
+                            process_info[load_pid].burst, file_name);
         }
     }
 }
@@ -83,11 +83,12 @@ void write_summary(int method_num, const char *file_name) {
 
     for (int i = 0; i < arr_len; i++) {
         fprintf(fp, "%.0f\t\t%.0f\t\t%.0f\n", process_info[i].pid, process_info[i].wait,
-               (process_info[i].finished - process_info[i].arrival));
+                (process_info[i].finished - process_info[i].arrival));
         method_stats[method_num].avg_wt += process_info[i].wait;
         method_stats[method_num].avg_tt += (process_info[i].finished - process_info[i].arrival);
     }
 
+    method_stats[method_num].context_switches = get_size(sequence_queue);
     method_stats[method_num].avg_wt /= ((float) arr_len);
     method_stats[method_num].avg_tt /= ((float) arr_len);
 
@@ -95,7 +96,7 @@ void write_summary(int method_num, const char *file_name) {
     fprintf(fp, "Process sequence: ");
     print_queue(sequence_queue, fp);
     fprintf(fp, "\n");
-    fprintf(fp, "Context switches: %i\n\n", get_size(sequence_queue));
+    fprintf(fp, "Context switches: %i\n\n", method_stats[method_num].context_switches);
     fclose(fp);
 }
 
@@ -170,7 +171,6 @@ int handle_cycle(int method_num, const char *file_name) {
         run_pid = load_pid;
         load_pid = -1;
         cpu_info.state = 'R';
-        method_stats[method_num].context_switches += 1;
         process_info[run_pid].burst -= 1;
         // Process may or may not be finished, function determines if still running and if not will handle it
         handle_finished_process();

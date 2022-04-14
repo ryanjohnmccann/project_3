@@ -28,4 +28,6 @@ void stcf(const char *output_file);
 
 void round_robin(const char *output_file);
 
+void write_final_summary(const char *output_file);
+
 #endif
