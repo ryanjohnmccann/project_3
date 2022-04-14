@@ -75,9 +75,9 @@ void init_output_file(const char *file_name) {
 int main(int argc, char *argv[]) {
 
     // Snapshot interval
-    snapshot = atoi(argv[4]);
-    const char *input_file_name = argv[2];
-    const char *output_file_name = argv[3];
+    snapshot = atoi(argv[3]);
+    const char *input_file_name = argv[1];
+    const char *output_file_name = argv[2];
 
     init_output_file(output_file_name);
 
