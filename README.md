@@ -25,5 +25,7 @@
 #### Build your binaries:
 ```cmake --build .```
 
+#### NOTE: You need to MANUALLY move/copy the data files into the build directory for this to work
+
 #### And then run the proper binary with command line arguments:
 ```./project_3 testin1.dat out1.txt 10```
