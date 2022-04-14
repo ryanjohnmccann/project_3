@@ -1,8 +1,7 @@
-// TODO: Context switch bug (STCF data file 2)
 // TODO: Write to output files
 // TODO: Print final final summary results
-// TODO: Neaten
 // TODO: Remove context switches from that struct
+// TODO: Handle various ties (SJF, STCF, Priority)
 
 // Standard imports
 #include <stdio.h>
@@ -16,7 +15,6 @@
 struct Queue *arrival_queue;
 struct Queue *ready_queue;
 struct Queue *sequence_queue;
-// TODO: Find a better way to do this (Will eventually do a linked list)
 struct ProcessInfo process_info[10000];
 
 int snapshot, arr_len;
@@ -36,6 +34,7 @@ void init_arrival_queue(const char *file_name) {
 
     arr_len = 0;
 
+    // Initialize and clean arrival queue
     arrival_queue = create_queue();
     clean_queue(arrival_queue);
 
@@ -65,34 +64,46 @@ void init_arrival_queue(const char *file_name) {
 
 }
 
+void init_output_file(const char *file_name) {
+    FILE *fp;
+
+    fp = fopen(file_name, "w");
+    fclose(fp);
+}
+
 // Controls the program
 int main(int argc, char *argv[]) {
 
     // Snapshot interval
     snapshot = atoi(argv[4]);
-    const char *file_name = argv[2];
+    const char *input_file_name = argv[2];
+    const char *output_file_name = argv[3];
+
+    init_output_file(output_file_name);
 
     // Main simulation loop
     for (int mode_select = 0; mode_select < 5; mode_select++) {
         ready_queue = create_queue();
         sequence_queue = create_queue();
-        // Reset arrival queue
-        init_arrival_queue(file_name);
+        // Reset arrival queue and get ready for another scheduling simulation
+        init_arrival_queue(input_file_name);
         init_sim(mode_select);
         if (mode_select == 0) {
-            fcfs();
+            fcfs(output_file_name);
         } else if (mode_select == 1) {
-            sjf();
+            sjf(output_file_name);
         } else if (mode_select == 2) {
-            stcf();
+            stcf(output_file_name);
         } else if (mode_select == 3) {
-            round_robin();
+            round_robin(output_file_name);
         } else if (mode_select == 4) {
-            priority();
+            priority(output_file_name);
         }
         clean_queue(ready_queue);
         clean_queue(sequence_queue);
     }
+
+    write_final_summary(output_file_name);
 
     return 0;
 }

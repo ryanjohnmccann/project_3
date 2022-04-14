@@ -6,6 +6,7 @@
 #include "sched_sim.h"
 
 extern struct ProcessInfo process_info[100];
+extern struct MethodStats method_stats[4];
 
 // Source for queue code: https://www.geeksforgeeks.org/queue-linked-list-implementation/
 
@@ -71,16 +72,16 @@ int is_empty(struct Queue *q) {
     return 0;
 }
 
-void print_queue(struct Queue *q) {
+void print_queue(struct Queue *q, FILE *fp) {
     struct QNode *tmp_node = q->front;
     if (tmp_node == NULL) {
-        printf("empty");
+        fprintf(fp, "empty");
     } else {
         while (tmp_node != NULL) {
-            printf("%i", tmp_node->key);
+            fprintf(fp, "%i", tmp_node->key);
             tmp_node = tmp_node->next;
             if (tmp_node != NULL) {
-                printf("-");
+                fprintf(fp, "-");
             }
         }
     }
@@ -114,7 +115,6 @@ void transfer_arr_queue(struct Queue *q, int *arr, int size) {
     }
 }
 
-// Code has been modified from source: https://www.sanfoundry.com/c-program-sort-array-descending-order/
 void sort_queue(struct Queue *q, char method) {
     int tmp, swap;
 
@@ -126,8 +126,16 @@ void sort_queue(struct Queue *q, char method) {
     for (int i = 0; i < size; i++) {
         for (int j = i + 1; j < size; j++) {
             if (method == 'b') {
-                // TODO: Should this be the same as priority?
-                swap = process_info[tmp_arr[i]].burst > process_info[tmp_arr[j]].burst;
+                // A process was moved behind another process with equal burst
+                if (process_info[tmp_arr[i]].burst == process_info[tmp_arr[j]].burst) {
+                    if (process_info[tmp_arr[i]].init_pos > process_info[tmp_arr[j]].init_pos) {
+                        swap = 1;
+                    } else {
+                        swap = 0;
+                    }
+                } else {
+                    swap = process_info[tmp_arr[i]].burst > process_info[tmp_arr[j]].burst;
+                }
             } else if (method == 'p') {
                 // A process was moved behind another process with equal priority
                 if (process_info[tmp_arr[i]].priority == process_info[tmp_arr[j]].priority) {
@@ -139,6 +147,12 @@ void sort_queue(struct Queue *q, char method) {
                 } else {
                     swap = process_info[tmp_arr[i]].priority > process_info[tmp_arr[j]].priority;
                 }
+            } else if (method == 'w') {
+                swap = method_stats[tmp_arr[i]].avg_wt > method_stats[tmp_arr[j]].avg_wt;
+            } else if (method == 't') {
+                swap = method_stats[tmp_arr[i]].avg_tt > method_stats[tmp_arr[j]].avg_tt;
+            } else if (method == 'c') {
+                swap = method_stats[tmp_arr[i]].context_switches > method_stats[tmp_arr[j]].context_switches;
             }
 
             if (swap) {

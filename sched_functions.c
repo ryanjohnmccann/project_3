@@ -1,8 +1,7 @@
-// TODO: There is a context switch bug\
-// TODO: Transfer prints to write to file
 
 // Standard imports
 #include <stdio.h>
+#include <stdlib.h>
 
 // Header file imports
 #include "queue.h"
@@ -21,76 +20,92 @@ extern struct ProcessInfo process_info[100];
 extern int run_pid, load_pid, old_pid;
 extern int arr_len;
 
-void print_cpu(float pid, float second_pid, float burst, float second_burst) {
-    printf("t = %i\n", cpu_info.time);
+void write_cpu_cycle(float pid, float second_pid, float burst, float second_burst, const char *file_name) {
+    FILE *fp;
+
+    fp = fopen(file_name, "a");
+
+
+    fprintf(fp, "t = %i\n", cpu_info.time);
     // Loading
     if (cpu_info.state == 'L') {
-        printf("CPU: Loading process %.0f (CPU burst = %.0f)\n", pid, burst);
+        fprintf(fp, "CPU: Loading process %.0f (CPU burst = %.0f)\n", pid, burst);
     }
         // Running
     else if (cpu_info.state == 'R') {
-        printf("CPU: Running process %.0f (remaining CPU burst = %.0f)\n", pid, burst);
+        fprintf(fp, "CPU: Running process %.0f (remaining CPU burst = %.0f)\n", pid, burst);
     }
         // Finishing and loading
     else if (cpu_info.state == 'B') {
-        printf("CPU: Finishing process %.0f; loading process %.0f (CPU burst = %.0f)\n", pid, second_pid, burst);
+        fprintf(fp, "CPU: Finishing process %.0f; loading process %.0f (CPU burst = %.0f)\n", pid, second_pid, burst);
     }
         // Finishing
     else if (cpu_info.state == 'F') {
-        printf("CPU: Finishing process %.0f\n", pid);
+        fprintf(fp, "CPU: Finishing process %.0f\n", pid);
     }
         // Preempting a process
     else if (cpu_info.state == 'P') {
-        printf("CPU: Preempting process %.0f (remaining CPU burst = %.0f); loading process %.0f"
-               " (CPU burst = %.0f)\n", pid, burst, second_pid, second_burst);
+        fprintf(fp, "CPU: Preempting process %.0f (remaining CPU burst = %.0f); loading process %.0f"
+                    " (CPU burst = %.0f)\n", pid, burst, second_pid, second_burst);
     }
-    printf("Ready queue: ");
-    print_queue(ready_queue);
-    printf("\n\n");
+    fprintf(fp, "Ready queue: ");
+    print_queue(ready_queue, fp);
+    fprintf(fp, "\n\n");
+    fclose(fp);
 }
 
-void handle_cpu_print() {
+void handle_write_cpu_cycle(const char *file_name) {
     if ((cpu_info.time % cpu_info.snapshot) == 0 || (cpu_info.snapshot == 1 && cpu_info.time == 0)) {
         // Loading
         if (cpu_info.state == 'L') {
-            print_cpu(load_pid, -1, process_info[load_pid].burst, 0);
+            write_cpu_cycle(load_pid, -1, process_info[load_pid].burst, 0, file_name);
         }
             // Running or just finishing (with no load)
         else if (cpu_info.state == 'R' || cpu_info.state == 'F') {
-            print_cpu(run_pid, -1, process_info[run_pid].burst, 0);
+            write_cpu_cycle(run_pid, -1, process_info[run_pid].burst, 0, file_name);
         }
             // Finishing and loading
         else if (cpu_info.state == 'B') {
-            print_cpu(run_pid, load_pid, process_info[load_pid].burst, 0);
+            write_cpu_cycle(run_pid, load_pid, process_info[load_pid].burst, 0, file_name);
         } else if (cpu_info.state == 'P') {
-            print_cpu(old_pid, load_pid, process_info[old_pid].burst,
-                      process_info[load_pid].burst);
+            write_cpu_cycle(old_pid, load_pid, process_info[old_pid].burst,
+                            process_info[load_pid].burst, file_name);
         }
     }
 }
 
-void print_summary(int method_num) {
-    printf("PID\t\tWT\t\tTT\n");
+void write_summary(int method_num, const char *file_name) {
+    FILE *fp;
+
+    fp = fopen(file_name, "a");
+
+    fprintf(fp, "PID\t\tWT\t\tTT\n");
 
     for (int i = 0; i < arr_len; i++) {
-        printf("%.0f\t\t%.0f\t\t%.0f\n", process_info[i].pid, process_info[i].wait,
-               (process_info[i].finished - process_info[i].arrival));
+        fprintf(fp, "%.0f\t\t%.0f\t\t%.0f\n", process_info[i].pid, process_info[i].wait,
+                (process_info[i].finished - process_info[i].arrival));
         method_stats[method_num].avg_wt += process_info[i].wait;
-        // TODO: Only for non-preemptive?
         method_stats[method_num].avg_tt += (process_info[i].finished - process_info[i].arrival);
     }
 
+    method_stats[method_num].context_switches = get_size(sequence_queue);
     method_stats[method_num].avg_wt /= ((float) arr_len);
     method_stats[method_num].avg_tt /= ((float) arr_len);
 
-    printf("AVG\t\t%.2f\t%.2f\n\n", method_stats[method_num].avg_wt, method_stats[method_num].avg_tt);
-    printf("Process sequence: ");
-    print_queue(sequence_queue);
-    printf("\n");
-    printf("Context switches: %i\n\n", get_size(sequence_queue));
+    fprintf(fp, "AVG\t\t%.2f\t%.2f\n\n", method_stats[method_num].avg_wt, method_stats[method_num].avg_tt);
+    fprintf(fp, "Process sequence: ");
+    print_queue(sequence_queue, fp);
+    fprintf(fp, "\n");
+    fprintf(fp, "Context switches: %i\n\n", method_stats[method_num].context_switches);
+    fclose(fp);
 }
 
+/***
+ * Determines if the currently running process is about to finish or not. If true, function handles the next cpu state
+ * and potentially a new loading process
+ */
 void handle_finished_process() {
+    // Technically this number should never be less than zero
     if (process_info[run_pid].burst <= 0) {
         process_info[run_pid].finished = cpu_info.time;
         // Load the next process while finishing
@@ -104,6 +119,9 @@ void handle_finished_process() {
     }
 }
 
+/***
+ * Traverses through the ready queue and updates wait times for all processes in it
+ */
 void calculate_wait() {
     int size = 0;
     int tmp_arr[get_size(ready_queue)];
@@ -115,6 +133,7 @@ void calculate_wait() {
     }
 
     for (int i = 0; i < size; i++) {
+        // Do not add to wait time for a loading process
         if (process_info[tmp_arr[i]].pid != load_pid) {
             process_info[tmp_arr[i]].wait += 1;
         }
@@ -122,7 +141,12 @@ void calculate_wait() {
     }
 }
 
-int handle_cycle(int method_num) {
+/***
+ * Runs a cycle of the CPU
+ * @param method_num A number to determine which scheduling algorithm is currently running
+ * @return 1 if last cycle, 0 otherwise
+ */
+int handle_cycle(int method_num, const char *file_name) {
     // Last cycle was a loading state, process is ready to be removed from the ready queue
     if (cpu_info.state == 'L') {
         dequeue(ready_queue);
@@ -147,14 +171,13 @@ int handle_cycle(int method_num) {
         run_pid = load_pid;
         load_pid = -1;
         cpu_info.state = 'R';
-        method_stats[method_num].context_switches += 1;
         process_info[run_pid].burst -= 1;
         // Process may or may not be finished, function determines if still running and if not will handle it
         handle_finished_process();
     }
 
     // Determines if we need to print cpu contents
-    handle_cpu_print();
+    handle_write_cpu_cycle(file_name);
 
     // Don't dequeue from the ready queue until after we print
     if (cpu_info.state == 'B') {
@@ -176,12 +199,18 @@ int handle_cycle(int method_num) {
     return 0;
 }
 
+/***
+ * Determines if something from the arrival queue should be added to the ready queue, sorts the ready queue afterwards
+ * if necessary
+ * @param will_sort To determine if we need to sort e.g. FCFS does not
+ * @param sort_by Determines what we sort by e.g. burst or priority
+ */
 void handle_arrival_queue(int will_sort, char sort_by) {
     while (!is_empty(arrival_queue) && process_info[arrival_queue->front->key].arrival <= cpu_info.time) {
 
         enqueue(ready_queue, process_info[arrival_queue->front->key].pid);
         dequeue(arrival_queue);
-        // Rearrange ready queue by burst time
+
         if (get_size(ready_queue) > 1 && will_sort) {
             sort_queue(ready_queue, sort_by);
         }
